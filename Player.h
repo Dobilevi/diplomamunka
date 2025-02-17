@@ -3,23 +3,9 @@
 
 #include <string>
 
-class Player {
-private:
-    constexpr static const float speed = 10.0f;
-
-    unsigned short int id = 0;
-
-    float x = 0.0f;
-    float y = 0.0f;
-
-   public:
-    std::string ToString() const;
-
-    void SetPos(float x, float y);
-
-    float GetPosX() const;
-
-    float GetPosY() const;
+struct Player {
+    std::string ip = "";
+    uint64_t clientId = 0;
 };
 
 #endif  // PLAYER_H

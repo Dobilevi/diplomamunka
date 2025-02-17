@@ -1,3 +1,4 @@
+
 #include "Server.h"
 
 #include <assert.h>
@@ -9,12 +10,28 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <fcntl.h>
+
 #include <unistd.h>
+//#include <stdlib.h>
+#include <cstring>
+#include <iostream>
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <cerrno>
 
 #include "uudp.h"
 
 Server::Server() {
+    assert(res == NO_ERROR);
 
+    // Establish connection with the server instance
+//    namedPipeWriter.WriteMessage(MessageType::Connect, static_cast<uint64_t>(321)); // TODO: test data
+
+    receiveUpdateAsyncTask = std::async(&Server::ReceiveServerData, this);
+
+    // Start listening for messages over the network
+    receiveClientUpdateAsyncTask = std::async(&Server::ReceiveClientData, this);
 }
 
 Server::~Server() {
@@ -23,41 +40,112 @@ Server::~Server() {
     WSACleanup();
 }
 
-int Server::ReceiveData() {
-    fd_set readfds;
+[[noreturn]] void Server::ReceiveServerData() {
+    MessageType messageType;
+    uint64_t clientId;
+    SpawnMessage spawnMessage;
+    UpdateMessage updateMessage;
 
-    FD_ZERO(&readfds);
-    FD_SET(listenSocket, &readfds);
+    while (true) {
+        messageType = namedPipeReader.ReadMessageType();
 
-    sockaddr address{AF_INET, "127.0.0.1"};
-
-    int received;
-    char buffer[256];
-    int fromlen = sizeof address;
-
-    float location[2] = {0.0f, 0.0f};
-
-
-    while(true) {
-        select(listenSocket + 1, &readfds, nullptr, nullptr, nullptr);
-
-        if (FD_ISSET(listenSocket, &readfds)) {
-            printf("Message received!\n");
-
-            received = recvfrom(listenSocket, buffer, sizeof buffer, 0, &address, &fromlen);
-
-            printf("Received: %f, %f\n", reinterpret_cast<float*>(buffer)[0], reinterpret_cast<float*>(buffer)[1]);
-
-            game.players[0].SetPos(reinterpret_cast<float*>(buffer)[0], reinterpret_cast<float*>(buffer)[1]);
+        switch (messageType) {
+            case MessageType::Connect:
+            case MessageType::Disconnect:
+                clientId = namedPipeReader.ReadConnectionMessage();
+                udpWriter.MulticastMessage(messageType, clientId);
+                break;
+            case MessageType::Spawn:
+                spawnMessage = namedPipeReader.ReadSpawnMessage();
+                udpWriter.MulticastMessage(messageType, spawnMessage);
+                break;
+            case MessageType::Update:
+                updateMessage = namedPipeReader.ReadUpdateMessage();
+                udpWriter.MulticastMessage(messageType, updateMessage);
+                break;
+            default:
+                break;
         }
-        else {
-            printf("Timed out.\n");
-        }
-
-        FD_ZERO(&readfds);
-        FD_SET(listenSocket, &readfds);
     }
 }
+
+[[noreturn]] void Server::ReceiveClientData() {
+    while (true) {
+        switch (udpReader.ReadMessage()) {
+            case Connect:
+            case Disconnect:
+                namedPipeWriter.WriteMessage(udpReader.GetMessageType(), udpReader.GetClientId());
+                break;
+            case Update:
+                namedPipeWriter.WriteMessage(udpReader.GetMessageType(), udpReader.GetUpdateMessage());
+                break;
+            case Spawn:
+            default:
+                // TODO
+                break;
+        }
+    }
+}
+
+
+//[[noreturn]] void Server::ReceiveClientData() {
+//    fd_set readfds;
+//
+//    FD_ZERO(&readfds);
+//    FD_SET(listenSocket, &readfds);
+//
+//    sockaddr address{AF_INET, "127.0.0.1"};
+//
+//    MessageType messageType;
+//    uint64_t clientId;
+//    UpdateMessage updateMessage;
+//
+//    int received;
+//    char buffer[256];
+//    int fromlen = sizeof(address);
+//
+//    float location[2] = {0.0f, 0.0f};
+//
+//
+//    while(true) {
+//
+//        select(listenSocket + 1, &readfds, nullptr, nullptr, nullptr);
+//
+//        if (FD_ISSET(listenSocket, &readfds)) {
+//            printf("Message received!\n");
+//
+//            received = recvfrom(listenSocket, buffer, sizeof(MessageType), 0, &address, &fromlen);
+//
+//            std::memcpy(&messageType, buffer, sizeof(MessageType));
+//
+//            switch (messageType) {
+//                case Connect:
+//                case Disconnect:
+//                    std::memcpy(&clientId, buffer + sizeof(MessageType), sizeof(clientId));
+//                    namedPipeWriter.WriteMessage(messageType, clientId);
+//                    break;
+//                case Spawn:
+//                    break;
+//                case Update:
+//                    std::memcpy(&updateMessage, buffer + sizeof(MessageType), sizeof(updateMessage));
+//                    namedPipeWriter.WriteMessage(messageType, updateMessage);
+//                    break;
+//                default:
+//                    break;
+//            }
+//
+//            //            printf("Received: %f, %f\n", reinterpret_cast<float*>(buffer)[0], reinterpret_cast<float*>(buffer)[1]);
+//
+////            game.players[0].SetPos(reinterpret_cast<float*>(buffer)[0], reinterpret_cast<float*>(buffer)[1]);
+//        }
+//        else {
+//            printf("Timed out.\n");
+//        }
+//
+//        FD_ZERO(&readfds);
+//        FD_SET(listenSocket, &readfds);
+//    }
+//}
 
 int Server::SendUpdates() {
     int result = 0;
@@ -82,9 +170,9 @@ int Server::SendUpdates() {
     select(sendSocket + 1, nullptr, &writefds, nullptr, nullptr);
 
     if (FD_ISSET(sendSocket, &writefds)) {
-        float buf[2] = {game.players[0].GetPosX(), game.players[0].GetPosY()};
+//        float buf[2] = {game.players[0].GetPosX(), game.players[0].GetPosY()};
 //        printf("%s\n", game.players[0].ToString().c_str());
-result = sendto(sendSocket, reinterpret_cast<char*>(buf), sizeof(float) * 2, 0, sendP->ai_addr, sendP->ai_addrlen);
+//result = sendto(sendSocket, reinterpret_cast<char*>(buf), sizeof(float) * 2, 0, sendP->ai_addr, sendP->ai_addrlen);
         if (result == -1) {
             printf("Error: %d\n", errno);
         } else {
@@ -99,19 +187,6 @@ result = sendto(sendSocket, reinterpret_cast<char*>(buf), sizeof(float) * 2, 0, 
 //    FD_SET(sendSocket, &writefds);
 
     return result;
-}
-
-int Server::GameLoop() {
-    gameRunning = true;
-    while(gameRunning) {
-        // Call async
-        std::future<int> EventualValue = std::async(&Server::SendUpdates, this);
-
-        Sleep(updateInterval);
-        int a = EventualValue.get();
-    }
-
-    return 0;
 }
 
 int Server::Start() {
@@ -176,13 +251,26 @@ int Server::Start() {
 //    result = bind(sendSocket, (sockaddr*)&sendAddr, sizeof(sendAddr));
 //    assert(result != SOCKET_ERROR);
 
-    // Game phase
-    game = Game();
-
-    std::future<int> EventualValue = std::async(&Server::ReceiveData, this);
-
-    result = GameLoop();
-    int a = EventualValue.get();
-
     return result;
+}
+
+bool Server::Test() {
+//    static int n = 0;
+//    static float x = -10;
+//    static float y = -10;
+//
+//    namedPipeWriter.WriteMessage(MessageType::Update, UpdateMessage{321, x, 6.987654321, x, true}); // TODO: Test data
+//    x += 0.01;
+//
+//    sleep(1);
+
+    static float x = 1.0f;
+
+    udpWriter.MulticastMessage(Update, UpdateMessage{365, x, 2.0f, x, true});
+    x += 0.1f;
+
+    sleep(1);
+    printf("SENT!\n");
+
+    return true;
 }

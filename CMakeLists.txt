@@ -11,12 +11,19 @@ add_executable(main
         main.cpp
         Server.cpp
         Server.h
-        Game.cpp
-        Game.h
         Player.cpp
         Player.h
         Projectile.cpp
         Projectile.h
+        NamedPipeReader.h
+        NamedPipeReader.cpp
+        NamedPipeWriter.h
+        NamedPipeWriter.cpp
+        UDPReader.h
+        UDPReader.cpp
+        UDPWriter.h
+        UDPWriter.cpp
+        Player.h
         uudp.h
 )
 
