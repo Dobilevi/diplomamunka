@@ -1,23 +1,27 @@
+
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <winsock.h>
+#include <future>
+#include <vector>
+
 #include <ws2tcpip.h>
+#include <winsock.h>
 
-#include "Game.h"
+#include "NamedPipeReader.h"
+#include "NamedPipeWriter.h"
 
-enum MessageType {
-    CONNECT,
-    DISCONNECT,
-    EVENT,
-    MOVE,
-    SYNC
-};
+#include "UDPReader.h"
+#include "UDPWriter.h"
+
+#include "Player.h"
 
 class Server {
 private:
+    WSAData wsaData;
+    int res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
     bool gameRunning = false;
-    const unsigned short updateInterval = 50; // milliseconds
 
     SOCKET listenSocket;
     struct sockaddr_in listenAddr;
@@ -25,20 +29,34 @@ private:
     struct sockaddr_in sendAddr;
     addrinfo* sendP;
 
-    int SendUpdates();
+    // Named pipes
+    NamedPipeReader namedPipeReader;
+    NamedPipeWriter namedPipeWriter;
 
-    int ReceiveData();
+    std::future<void> receiveUpdateAsyncTask;
+    std::future<void> receiveClientUpdateAsyncTask;
 
-public:
+    // UDP
+    UDPReader udpReader;
+    UDPWriter udpWriter;
+
+    // Logic
+    std::vector<Player> players;
+
+    //
+    [[noreturn]] void ReceiveClientData();
+    [[noreturn]] void ReceiveServerData();
+   public:
+
     Server();
 
     ~Server();
 
-    Game game;
-
-    int GameLoop();
+    int SendUpdates();
 
     int Start();
+
+    bool Test();
 };
 
 #endif  // SERVER_H
