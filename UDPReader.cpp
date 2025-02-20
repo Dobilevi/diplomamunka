@@ -25,7 +25,7 @@ MessageType UDPReader::ReadMessage() {
     FD_ZERO(&readfds);
     FD_SET(listenSocket, &readfds);
 
-    int fromlen = sizeof(address);
+    socklen_t fromlen = sizeof(address);
 
     int res = select(listenSocket + 1, &readfds, nullptr, nullptr, nullptr);
 //    printf("Select: %d\n", res);

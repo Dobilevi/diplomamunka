@@ -5,8 +5,16 @@
 #include <future>
 #include <vector>
 
+#ifdef __linux__
+
+
+
+#elif _WIN32
+
 #include <ws2tcpip.h>
 #include <winsock.h>
+
+#endif
 
 #include "NamedPipeReader.h"
 #include "NamedPipeWriter.h"
@@ -18,8 +26,10 @@
 
 class Server {
 private:
+#ifdef _WIN32
     WSAData wsaData;
     int res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
 
     bool gameRunning = false;
 
