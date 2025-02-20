@@ -7,8 +7,13 @@
 #include <sstream>
 #include <string>
 
+#ifdef __linux__
+
+#elif _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#endif
+
 #include <fcntl.h>
 
 #include <unistd.h>
@@ -23,21 +28,32 @@
 #include "uudp.h"
 
 Server::Server() {
+#ifdef _WIN32
     assert(res == NO_ERROR);
+#endif
 
     // Establish connection with the server instance
 //    namedPipeWriter.WriteMessage(MessageType::Connect, static_cast<uint64_t>(321)); // TODO: test data
 
     receiveUpdateAsyncTask = std::async(&Server::ReceiveServerData, this);
 
+//    MessageType messageType = Connect;
+//    uint64_t clientId = 325;
+//    namedPipeWriter.WriteMessage(messageType, clientId);
+
     // Start listening for messages over the network
     receiveClientUpdateAsyncTask = std::async(&Server::ReceiveClientData, this);
 }
 
 Server::~Server() {
+#ifdef __linux__
+    close(listenSocket);
+    close(sendSocket);
+#elif _WIN32
     closesocket(listenSocket);
     closesocket(sendSocket);
     WSACleanup();
+#endif
 }
 
 [[noreturn]] void Server::ReceiveServerData() {
@@ -48,6 +64,7 @@ Server::~Server() {
 
     while (true) {
         messageType = namedPipeReader.ReadMessageType();
+        printf("Received!\n");
 
         switch (messageType) {
             case MessageType::Connect:
@@ -74,6 +91,7 @@ Server::~Server() {
         switch (udpReader.ReadMessage()) {
             case Connect:
             case Disconnect:
+                printf("CONNECTING!\n");
                 namedPipeWriter.WriteMessage(udpReader.GetMessageType(), udpReader.GetClientId());
                 break;
             case Update:
@@ -194,10 +212,11 @@ int Server::Start() {
     gameRunning = false;
 
     int result;
+#ifdef _WIN32
     WSAData wsaData;
     result = WSAStartup(MAKEWORD(2, 2), &wsaData);
     assert(result == NO_ERROR);
-
+#endif
 
 
     listenSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -255,18 +274,18 @@ int Server::Start() {
 }
 
 bool Server::Test() {
-//    static int n = 0;
-//    static float x = -10;
-//    static float y = -10;
+    static int n = 0;
+    static float x = -10;
+    static float y = -10;
 //
-//    namedPipeWriter.WriteMessage(MessageType::Update, UpdateMessage{321, x, 6.987654321, x, true}); // TODO: Test data
+    namedPipeWriter.WriteMessage(MessageType::Update, UpdateMessage{325, x, 6.987654321, x, true}); // TODO: Test data
 //    x += 0.01;
-//
+
 //    sleep(1);
 
-    static float x = 1.0f;
+//    static float x = 1.0f;
 
-    udpWriter.MulticastMessage(Update, UpdateMessage{365, x, 2.0f, x, true});
+//    udpWriter.MulticastMessage(Update, UpdateMessage{365, x, 2.0f, x, true});
     x += 0.1f;
 
     sleep(1);

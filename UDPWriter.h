@@ -2,10 +2,22 @@
 #ifndef UDPWRITER_H
 #define UDPWRITER_H
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
 #include <iostream>
 #include <cstring>
+
+#ifdef __linux__
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#elif _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
+
+#include "macros.h"
+
 
 #include "MessageType.h"
 
