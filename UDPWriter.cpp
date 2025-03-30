@@ -1,45 +1,44 @@
 
 #include "UDPWriter.h"
 
-#include <cassert>
 #include <iostream>
 
 
 UDPWriter::UDPWriter() {
+    FD_ZERO(&currentwritefds);
+}
+
+void UDPWriter::SetSocket(SOCKET newSocket) {
+    socket = newSocket;
+    FD_SET(socket, &currentwritefds);
+}
+
+void UDPWriter::AddClient(const std::string& ip, const std::string& port, uint64_t clientId) {
     addrinfo hints{}, *servinfo;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_protocol = IPPROTO_UDP;
 
-    int rv = getaddrinfo("127.0.0.1", "5000", &hints, &servinfo);
-    for(sendP = servinfo; sendP != NULL; sendP = sendP->ai_next) {
-        if ((sendSocket = socket(sendP->ai_family, sendP->ai_socktype,
-                                 sendP->ai_protocol)) == -1) {
-            perror("talker: socket");
-            continue;
-        }
+    int rv = getaddrinfo(ip.c_str(), port.c_str(), &hints, &servinfo);
 
-        break;
+    if (rv == 0) {
+        addrinfoMap[clientId] = servinfo;
+        packageIdMap[clientId] = 0;
+        clientMap[ip][port] = clientId;
+        std::cout <<"clientId: " << clientId << std::endl;
+    } else {
+        std::cout << "Error when adding client, error code: " << rv << std::endl;
     }
-
-    assert(sendSocket != INVALID_SOCKET);
 }
 
-//void UDPWriter::SendMessageTo(MessageType messageType, ) {
-//    FD_ZERO(&writefds);
-//    FD_SET(sendSocket, &writefds);
-//
-//    select(sendSocket + 1, nullptr, &writefds, nullptr, nullptr);
-//
-//    if (FD_ISSET(sendSocket, &writefds)) {
-//        int result = sendto(sendSocket, reinterpret_cast<char*>(buffer), sizeof(float) * 2, 0, sendP->ai_addr, sendP->ai_addrlen);
-//
-//        if (result == -1) {
-//            printf("Error: %d\n", errno);
-//        } else {
-//            printf("Sent!\n");
-//        }
-//    } else {
-//        // Timed out
-//    }
-//}
+void UDPWriter::RemoveClient(const std::string& ip, const std::string& port, uint64_t clientId) {
+    std::cout << "Removing: client: " << clientId << ", clientId: " << clientMap[ip][port] << std::endl;
+    addrinfoMap.erase(clientId);
+    packageIdMap.erase(clientId);
+    clientMap.at(ip).erase(port);
+
+    for (auto addrinfo : addrinfoMap) {
+        std::cout << "clientList: " << addrinfo.first << std::endl;
+    }
+}

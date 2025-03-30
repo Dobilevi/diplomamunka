@@ -5,16 +5,12 @@ project(diplomamunka)
 
 set(CMAKE_CXX_STANDARD 20)
 
-
-
 add_executable(main
         main.cpp
         Server.cpp
         Server.h
         Player.cpp
         Player.h
-        Projectile.cpp
-        Projectile.h
         NamedPipeReader.h
         NamedPipeReader.cpp
         NamedPipeWriter.h
@@ -24,7 +20,6 @@ add_executable(main
         UDPWriter.h
         UDPWriter.cpp
         Player.h
-        uudp.h
 )
 
 if(WIN32)

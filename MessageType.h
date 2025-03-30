@@ -5,28 +5,26 @@
 
 enum MessageType: uint16_t
 {
+    None,
+    Exit,
     Connect,
     Disconnect,
     Spawn,
     Update,
+    SetStartPosition
 };
 
-struct ConnectionMessage
-{
-    uint64_t clientId;
-};
-
-enum Spawnable {
-    PLAYER,
+enum Spawnable: uint16_t {
     FIRE,
-    ROCKET };
+    ROCKET
+};
 
 struct SpawnMessage {
-   uint64_t clientId;
-   Spawnable spawnable;
-   float x;
-   float y;
-   float rotation;
+    uint64_t clientId;
+    Spawnable spawnable;
+    float x;
+    float y;
+    float rotation;
 };
 
 struct UpdateMessage
@@ -35,7 +33,6 @@ struct UpdateMessage
     float x;
     float y;
     float rotation;
-    char isFiring; // bool
 };
 
 #endif  // MESSAGETYPE_H
