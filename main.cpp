@@ -7,9 +7,6 @@ int main(int argc, char** argv) {
     Server server = Server();
 
     bool shouldContinue = true;
-//    while (shouldContinue) {
-//        shouldContinue = server.Test();
-//    }
 
     std::string input;
     while (shouldContinue) {
@@ -19,11 +16,6 @@ int main(int argc, char** argv) {
             shouldContinue = false;
         }
     }
-
-//    bool shouldContinue = true;
-//    while (shouldContinue) {
-//        shouldContinue = server.Start();
-//    }
 
     std::cout << "Returns" << std::endl;
 

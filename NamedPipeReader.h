@@ -14,14 +14,14 @@ typedef unsigned int WINBOOL;
 
 class NamedPipeReader {
     HANDLE hPipe;
-    WINBOOL result;
+    WINBOOL result = 0;
 
 public:
     NamedPipeReader();
     virtual ~NamedPipeReader();
 
     MessageType ReadMessageType();
-    uint64_t ReadConnectionMessage();
+    uint64_t ReadUint64();
     UpdateMessage ReadUpdateMessage();
     SpawnMessage ReadSpawnMessage();
 };

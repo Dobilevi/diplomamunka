@@ -14,38 +14,30 @@ typedef unsigned int WINBOOL;
 
 class NamedPipeWriter {
     HANDLE hPipe;
-    WINBOOL result;
+    WINBOOL result = 0;
 
 #ifdef _WIN32
-    DWORD dwWritten;
+    DWORD dwWritten = 0;
 #endif
 
    public:
     NamedPipeWriter();
     virtual ~NamedPipeWriter();
 
-//    void WriteMessageType(MessageType messageType);
-//    void WriteConnectionMessage(uint64_t clientId);
-//    void WriteUpdateMessage(UpdateMessage updateMessage);
-
     template <typename T>
-    void WriteMessage(const MessageType &messageType, const T &message) {
+    void WriteMessage(const uint64_t packageId, const MessageType messageType, const T &message) {
 #ifdef __linux__
+        result = write(hPipe, &packageId, sizeof(uint64_t));
+
         result = write(hPipe, &messageType, sizeof(MessageType));
 
         result = write(hPipe, &message, sizeof(T));
 #elif _WIN32
-        result = WriteFile(hPipe,
-                  &messageType,
-                  sizeof(MessageType),
-                  &dwWritten,
-                  nullptr);
+        result = WriteFile(hPipe, &packageId, sizeof(uint64_t ), &dwWritten, nullptr);
 
-        result = WriteFile(hPipe,
-                           &message,
-                           sizeof(T),
-                           &dwWritten,
-                           nullptr);
+        result = WriteFile(hPipe, &messageType, sizeof(MessageType), &dwWritten, nullptr);
+
+        result = WriteFile(hPipe, &message, sizeof(T), &dwWritten, nullptr);
 #endif
     }
 };

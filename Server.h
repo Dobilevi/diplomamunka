@@ -3,17 +3,12 @@
 #define SERVER_H
 
 #include <future>
+#include <map>
 #include <vector>
 
-#ifdef __linux__
-
-
-
-#elif _WIN32
-
+#ifdef _WIN32
 #include <ws2tcpip.h>
 #include <winsock.h>
-
 #endif
 
 #include "NamedPipeReader.h"
@@ -27,46 +22,30 @@
 class Server {
 private:
 #ifdef _WIN32
-    WSAData wsaData;
-    int res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    WSAData wsaData{};
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 
-    bool gameRunning = false;
-
-    SOCKET listenSocket;
-    struct sockaddr_in listenAddr;
-    SOCKET sendSocket;
-    struct sockaddr_in sendAddr;
-    addrinfo* sendP;
+    std::map<uint64_t, uint64_t> clientIdMap{};
 
     // Named pipes
-    NamedPipeReader namedPipeReader;
-    NamedPipeWriter namedPipeWriter;
+    NamedPipeReader namedPipeReader = NamedPipeReader();
+    NamedPipeWriter namedPipeWriter = NamedPipeWriter();
 
     std::future<void> receiveUpdateAsyncTask;
     std::future<void> receiveClientUpdateAsyncTask;
 
     // UDP
-    UDPReader udpReader;
-    UDPWriter udpWriter;
+    UDPReader udpReader = UDPReader();
+    UDPWriter udpWriter = UDPWriter();
 
-    // Logic
-    std::vector<Player> players;
-
-    //
+    // Communication
     [[noreturn]] void ReceiveClientData();
     [[noreturn]] void ReceiveServerData();
+
    public:
-
     Server();
-
     ~Server();
-
-    int SendUpdates();
-
-    int Start();
-
-    bool Test();
 };
 
 #endif  // SERVER_H
