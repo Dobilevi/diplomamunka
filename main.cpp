@@ -17,7 +17,5 @@ int main(int argc, char** argv) {
         }
     }
 
-    std::cout << "Returns" << std::endl;
-
     return 0;
 }
