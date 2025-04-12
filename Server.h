@@ -7,17 +7,17 @@
 #include <vector>
 
 #ifdef _WIN32
-#include <ws2tcpip.h>
-#include <winsock.h>
+//#include <ws2tcpip.h>
+//#include <winsock.h>
 #endif
 
-#include "NamedPipeReader.h"
-#include "NamedPipeWriter.h"
+#include "NamedPipes/NamedPipeReader.h"
+#include "NamedPipes/NamedPipeWriter.h"
 
-#include "UDPReader.h"
-#include "UDPWriter.h"
+#include "UDP/UDPReader.h"
+#include "UDP/UDPWriter.h"
 
-#include "Player.h"
+#include "Assets/Player.h"
 
 class Server {
 private:
@@ -25,23 +25,32 @@ private:
     WSAData wsaData{};
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
+    const time_t timeOutLimit = 5; // sec
 
-    std::map<uint64_t, uint64_t> clientIdMap{};
+    std::mutex lastReceivedMessageMapMutex{};
+    std::map<uint64_t, time_t> lastReceivedMessageMap;
+    std::queue<Player> connectQueue{};
 
     // Named pipes
     NamedPipeReader namedPipeReader = NamedPipeReader();
     NamedPipeWriter namedPipeWriter = NamedPipeWriter();
 
+    std::future<void> checkTimeoutAsyncTask;
+    std::future<void> receiveUdpAsyncTask;
     std::future<void> receiveUpdateAsyncTask;
     std::future<void> receiveClientUpdateAsyncTask;
 
     // UDP
-    UDPReader udpReader = UDPReader();
+    UDPReader udpReader = UDPReader(namedPipeReader.ReadPort());
     UDPWriter udpWriter = UDPWriter();
 
     // Communication
+    [[noreturn]] void ReceiveUdp();
     [[noreturn]] void ReceiveClientData();
     [[noreturn]] void ReceiveServerData();
+
+    void CheckTimeOut();
+    [[noreturn]] void CheckTimeOutLoop();
 
    public:
     Server();

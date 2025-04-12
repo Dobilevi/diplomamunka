@@ -1,3 +1,4 @@
+
 #include "NamedPipeWriter.h"
 
 #include <chrono>
@@ -13,7 +14,7 @@
 #endif
 
 NamedPipeWriter::NamedPipeWriter() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // TODO: hack
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 #ifdef __linux__
     hPipe = mkfifo("/tmp/CppPipe", S_IWUSR | S_IRUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
