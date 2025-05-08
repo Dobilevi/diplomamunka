@@ -9,15 +9,16 @@ enum MessageType: uint16_t {
     CONNECT,
     DISCONNECT,
     SPAWN_PROJECTILE,
+    INITIALIZE_PROJECTILE,
     DESPAWN,
     UPDATE,
-    SPAWN,
-    _ERROR
-};
-
-enum ErrorType: uint16_t {
-    SERVER_FULL = 0,
-    OBJECT_DOES_NOT_EXIST
+    SPAWN_ENEMY,
+    SPAWN_PLAYER,
+    INITIALIZE_ENEMY,
+    INITIALIZE_PLAYER,
+    RESPAWN_ACK,
+    ERROR_SERVER_FULL,
+    ERROR_OBJECT_DOES_NOT_EXIST
 };
 
 enum Spawnable: uint16_t {
@@ -58,7 +59,6 @@ struct UpdateMessage {
 };
 
 struct SpawnMessage {
-    Spawnable spawnable;
     uint64_t clientId;
     float x;
     float y;

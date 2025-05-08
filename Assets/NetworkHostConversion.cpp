@@ -8,9 +8,14 @@
 #include <string>
 #include <algorithm>
 
+#ifdef __linux__
+
+#elif _WIN32
 #include <ws2tcpip.h>
 #include <winsock2.h>
+#endif
 
+#ifdef __linux__
 uint32_t htonf(float hostfloat) {
     uint32_t buffer;
     std::memcpy(&buffer, &hostfloat, sizeof(float));
@@ -26,6 +31,7 @@ float ntohf(uint32_t netfloat) {
 
     return buffer;
 }
+#endif
 
 void StringHostToNetwork(std::u16string& val) {
     std::for_each(val.begin(), val.end(), htons);
@@ -80,7 +86,6 @@ void DespawnMessageNetworkToHost(DespawnMessage& despawnMessage) {
 }
 
 void SpawnMessageHostToNetwork(SpawnMessage& spawnMessage) {
-    spawnMessage.spawnable = (Spawnable)htons(spawnMessage.spawnable);
     spawnMessage.clientId = htonll(spawnMessage.clientId);
     spawnMessage.x = htonf(spawnMessage.x);
     spawnMessage.y = htonf(spawnMessage.x);

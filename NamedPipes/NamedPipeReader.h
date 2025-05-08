@@ -2,10 +2,7 @@
 #ifndef NAMEDPIPEREADER_H
 #define NAMEDPIPEREADER_H
 
-#ifdef __linux__
-typedef int HANDLE;
-typedef unsigned int WINBOOL;
-#elif _WIN32
+#if _WIN32
 #include <ws2tcpip.h>
 
 #include <stdexcept>
@@ -16,34 +13,19 @@ typedef unsigned int WINBOOL;
 
 
 class NamedPipeReader {
+#ifdef __linux__
+    int hPipe;
+    ssize_t result = 0;
+#elif _WIN32
     HANDLE hPipe;
-    WINBOOL result = 0;
+    int result = 0;
+#endif
 
 public:
     NamedPipeReader();
     virtual ~NamedPipeReader();
 
-    uint16_t ReadPort() {
-        uint16_t out;
-
-#ifdef __linux__
-        if ((result = read(hPipe, &out, sizeof(uint16_t))) < 0) {
-            throw std::runtime_error(strerror(errno));
-        }
-#elif _WIN32
-        DWORD dwRead;
-
-        DWORD len = sizeof(uint16_t);
-
-        if ((result = ReadFile(hPipe, &out, len, &dwRead, nullptr)) != FALSE) {
-            if ((dwRead != len) || !result) {
-                throw std::runtime_error("Pipe is closed!");
-            }
-        }
-#endif
-
-        return ntohs(out);
-    }
+    uint16_t ReadPort();
 
     template <typename T>
     void Read(T& out) {

@@ -46,7 +46,6 @@ class UDPReader {
     uint16_t messageTypeNetwork = 0;
     uint16_t errorTypeNetwork = 0;
     uint64_t m_clientIdNetwork{};
-    uint64_t projectileIdNetwork{};
     uint16_t lengthNetwork = 0;
     std::u16string playerNameNetwork{};
     SpawnProjectileMessage spawnMessageNetwork{};
@@ -54,10 +53,10 @@ class UDPReader {
 
     uint64_t packageIdHost{};
     MessageType messageTypeHost = MessageType::NONE;
-    ErrorType errorTypeHost;
     uint16_t lengthHost = 0;
     uint64_t m_clientIdHost = 0;
 
+    std::mutex clientMutex{};
     std::map<uint64_t, std::pair<std::string, std::string>> clientAddressMap{};
     std::map<std::string, std::map<std::string, uint64_t>> connectionMap{};
     std::map<std::string, std::map<std::string, bool>> waitingMap{};
@@ -87,8 +86,8 @@ public:
 
     void RemoveClient(uint64_t clientId);
 
-    bool IsConnected(const std::string& ip, const std::string& port) const;
-    bool IsConnected(const std::string& ip, const std::string& port, uint64_t clientId) const;
+    bool IsConnected(const std::string& ip, const std::string& port);
+    bool IsConnected(const std::string& ip, const std::string& port, uint64_t clientId);
 
     void ReadUdpPackage();
 
@@ -103,8 +102,6 @@ public:
     MessageType GetMessageTypeHost() const;
 
     uint16_t GetErrorType() const;
-
-    ErrorType GetErrorTypeHost() const;
 
     const std::string& GetIPAddress() const;
 

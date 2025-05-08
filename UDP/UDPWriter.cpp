@@ -44,3 +44,38 @@ void UDPWriter::RemoveClient(uint64_t clientId) {
     addrinfoMap.erase(clientId);
     packageIdMap.erase(clientId);
 }
+
+void UDPWriter::SendErrorMessage(const std::string& ip, const std::string& port, MessageType messageType) {
+    addrinfo hints{}, *servinfo;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_protocol = IPPROTO_UDP;
+
+    int rv = getaddrinfo(ip.c_str(), port.c_str(), &hints, &servinfo);
+
+    if (rv == 0) {
+
+    }
+
+    buffer.Reset();
+
+    buffer.Write(htonll((uint64_t)0));
+    buffer.Write(messageType);
+
+    FD_ZERO(&writefds);
+    FD_SET(socket, &writefds);
+
+    select(socket + 1, nullptr, &writefds, nullptr, nullptr);
+
+    if (FD_ISSET(socket, &writefds)) {
+        int result = sendto(socket, buffer.GetBuffer(), buffer.GetSize(), 0, servinfo->ai_addr, servinfo->ai_addrlen);
+
+        if (result == -1) {
+            printf("SendUdpMessage Error: %d\n", errno);
+        }
+    } else {
+        // Timed out
+        printf("SendUdpMessage TIMEOUT: socket: %llu!\n", socket);
+    }
+}
