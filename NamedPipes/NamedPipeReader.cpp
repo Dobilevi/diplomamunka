@@ -9,7 +9,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#ifdef __linux__
 #include <unistd.h>
+#elif _WIN32
+
+#endif
 
 
 NamedPipeReader::NamedPipeReader() {
@@ -46,6 +51,28 @@ NamedPipeReader::~NamedPipeReader() {
 #elif _WIN32
     DisconnectNamedPipe(hPipe);
 #endif
+}
+
+uint16_t NamedPipeReader::ReadPort() {
+    uint16_t out;
+
+#ifdef __linux__
+    if ((result = read(hPipe, &out, sizeof(uint16_t))) < 0) {
+        throw std::runtime_error(strerror(errno));
+    }
+#elif _WIN32
+    DWORD dwRead;
+
+    DWORD len = sizeof(uint16_t);
+
+    if ((result = ReadFile(hPipe, &out, len, &dwRead, nullptr)) != FALSE) {
+        if ((dwRead != len) || !result) {
+            throw std::runtime_error("Pipe is closed!");
+        }
+    }
+#endif
+
+    return ntohs(out);
 }
 
 void NamedPipeReader::ReadString(uint16_t length, std::u16string& out) {

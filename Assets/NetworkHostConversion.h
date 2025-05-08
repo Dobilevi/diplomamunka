@@ -4,7 +4,10 @@
 
 #include "MessageType.h"
 
+#ifdef __linux__
 uint32_t htonf();
+uint32_t ntohf();
+#endif
 
 #if __BIG_ENDIAN__
 # define htonll(x) (x)

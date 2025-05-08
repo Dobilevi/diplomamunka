@@ -5,18 +5,26 @@
 #include <future>
 #include <iostream>
 #include <string>
+
+#include <ctime>
+
+#ifdef __linux__
 #include <unistd.h>
+#elif _WIN32
+#include <windows.h>
+#endif
+
 
 #include <sys/types.h>
 
 #include "NetworkHostConversion.h"
 
-time_t GetTimestamp() {
-    static const clockid_t clock_id = CLOCK_REALTIME;
+std::time_t GetTimestamp() {
+    std::time_t time;
 
-    timespec time;
-    clock_gettime(clock_id, &time);
-    return time.tv_sec;
+    std::time(&time);
+
+    return time;
 }
 
 Server::Server() {
@@ -42,7 +50,11 @@ Server::Server() {
 }
 
 Server::~Server() {
-    namedPipeWriter.Write(htons(EXIT));
+    namedPipeWriterMutex.lock();
+    {
+        namedPipeWriter.Write(htons(EXIT));
+    }
+    namedPipeWriterMutex.unlock();
 
 #ifdef _WIN32
     WSACleanup();
@@ -64,8 +76,13 @@ void Server::CheckTimeOut() {
         for (const auto& client : lastReceivedMessageMap) {
             if ((timeStamp - client.second) > timeOutLimit) {
                 clientsToRemove.emplace_back(client.first);
-                namedPipeWriter.Write(htons(DISCONNECT));
-                namedPipeWriter.Write(htonll(client.first));
+
+                namedPipeWriterMutex.lock();
+                {
+                    namedPipeWriter.Write(htons(DISCONNECT));
+                    namedPipeWriter.Write(htonll(client.first));
+                }
+                namedPipeWriterMutex.unlock();
             }
         }
 
@@ -78,17 +95,18 @@ void Server::CheckTimeOut() {
 
 [[noreturn]] void Server::CheckTimeOutLoop() {
     while (true) {
+#ifdef __linux__
         sleep(1);
+#elif _WIN32
+        Sleep(1000);
+#endif
         CheckTimeOut();
     }
 }
 
 [[noreturn]] void Server::ReceiveServerData() {
     MessageType messageType;
-    Spawnable spawnable;
-    ErrorType errorType;
     uint64_t clientId;
-    uint64_t projectileId;
     uint16_t length;
     std::u16string playerName;
     SpawnProjectileMessage spawnProjectileMessage{};
@@ -98,13 +116,14 @@ void Server::CheckTimeOut() {
 
     while (true) {
         namedPipeReader.Read(messageType);
-//        std::cout << "messageType: " << ntohs(messageType) << std::endl;
+        std::cout << "messageType from server: " << ntohs(messageType) << std::endl;
 
-        switch ((MessageType)ntohs(messageType)) {
+        switch (ntohs(messageType)) {
             case MessageType::CONNECT: {
                 namedPipeReader.Read(spawnMessage);
                 namedPipeReader.Read(length);
                 namedPipeReader.ReadString(ntohs(length), playerName);
+
                 Player player = connectQueue.front();
 
                 udpWriter.AddClient(player.ip, player.port, ntohll(spawnMessage.clientId));
@@ -117,16 +136,19 @@ void Server::CheckTimeOut() {
                 lastReceivedMessageMapMutex.unlock();
 
                 connectQueue.pop();
-                udpWriter.MulticastSpawnPlayerMessage(messageType, spawnMessage, playerName);
+                udpWriter.MulticastSpawnPlayerMessage(messageType, spawnMessage, length, playerName);
                 break;
             }
             case MessageType::DISCONNECT: {
+                std::cout << "DISCONNECT" << std::endl;
                 namedPipeReader.Read(clientId);
 
-                udpWriter.RemoveClient(ntohll(clientId));
-                udpReader.RemoveClient(ntohll(clientId));
+                uint64_t clientIdHost = ntohll(clientId);
+                udpReader.RemoveClient(clientIdHost);
 
                 udpWriter.MulticastMessage(messageType, clientId);
+
+                udpWriter.RemoveClient(clientIdHost);
                 break;
             }
             case MessageType::SPAWN_PROJECTILE: {
@@ -144,29 +166,46 @@ void Server::CheckTimeOut() {
                 udpWriter.MulticastMessage(messageType, updateMessage);
                 break;
             }
-            case MessageType::SPAWN: {
+            case MessageType::INITIALIZE_PLAYER:
+            case MessageType::SPAWN_PLAYER: {
                 namedPipeReader.Read(clientId);
                 namedPipeReader.Read(spawnMessage);
-                if ((Spawnable)ntohs(spawnMessage.spawnable) == PLAYER) {
-                    namedPipeReader.Read(length);
-                    namedPipeReader.ReadString(ntohs(length), playerName);
-                    udpWriter.SendSpawnPlayerUdpMessage(ntohll(clientId), messageType, spawnMessage, playerName);
-                } else {
-                    udpWriter.SendUdpMessage(ntohll(clientId), messageType, spawnMessage);
-                }
+                namedPipeReader.Read(length);
+                namedPipeReader.ReadString(ntohs(length), playerName);
+
+                udpWriter.SendSpawnPlayerUdpMessage(ntohll(clientId), messageType, spawnMessage, playerName);
                 break;
             }
-            case MessageType::_ERROR: {
+            case MessageType::INITIALIZE_ENEMY:
+            case MessageType::SPAWN_ENEMY: {
                 namedPipeReader.Read(clientId);
-                namedPipeReader.Read(errorType);
-                udpWriter.SendUdpMessage(ntohll(clientId), messageType, errorType);
-                if ((ErrorType)ntohs(errorType) == ErrorType::SERVER_FULL) {
+                namedPipeReader.Read(spawnMessage);
+
+                udpWriter.SendUdpMessage(ntohll(clientId), messageType, spawnMessage);
+                break;
+            }
+            case MessageType::INITIALIZE_PROJECTILE: {
+                namedPipeReader.Read(clientId);
+                namedPipeReader.Read(spawnProjectileMessage);
+
+                udpWriter.SendUdpMessage(ntohll(clientId), messageType, spawnProjectileMessage);
+                break;
+            }
+            case MessageType::ERROR_SERVER_FULL: {
+                namedPipeReader.Read(clientId);
+                Player player;
+
+                connectQueueMutex.lock();
+                {
+                    player = connectQueue.front();
                     connectQueue.pop();
                 }
+                connectQueueMutex.unlock();
+
+                udpWriter.SendErrorMessage(player.ip, player.port, messageType);
                 break;
             }
             case MessageType::EXIT: {
-                std::cout << "EXIT!" << std::endl;
                 exit(0);
             }
             default: {
@@ -180,24 +219,26 @@ void Server::CheckTimeOut() {
     while (true) {
         udpReader.ReadMessage();
 
+        namedPipeWriterMutex.lock();
+
         switch (udpReader.GetMessageTypeHost()) {
             case CONNECT: {
-//                udpWriter.AddClient(udpReader.GetIPAddress(), udpReader.GetPortNumber(), udpReader.GetClientId());
-                connectQueue.emplace(udpReader.GetIPAddress(), udpReader.GetPortNumber(), udpReader.GetClientIdHost(), udpReader.GetPlayerName());
-//                namedPipeWriter.WriteConnectMessage(udpReader.GetMessageType(), udpReader.GetPlayerName().length(), udpReader.GetPlayerName());
+                connectQueueMutex.lock();
+                {
+                    connectQueue.emplace(udpReader.GetIPAddress(), udpReader.GetPortNumber(), udpReader.GetClientIdHost(), udpReader.GetPlayerName());
+                }
+                connectQueueMutex.unlock();
 
                 namedPipeWriter.Write(udpReader.GetMessageType());
                 namedPipeWriter.WriteString(udpReader.GetPlayerName());
                 break;
             }
             case DISCONNECT: {
-//                namedPipeWriter.WriteMessage(udpReader.GetMessageType(), udpReader.GetClientId());
                 namedPipeWriter.Write(udpReader.GetMessageType());
                 namedPipeWriter.Write(udpReader.GetClientId());
                 break;
             }
             case UPDATE: {
-//                namedPipeWriter.WriteMessage(udpReader.GetMessageType(), udpReader.GetUpdateMessage());
                 namedPipeWriter.Write(udpReader.GetMessageType());
                 namedPipeWriter.Write(udpReader.GetUpdateMessage());
 
@@ -209,28 +250,26 @@ void Server::CheckTimeOut() {
                 break;
             }
             case SPAWN_PROJECTILE: {
-//                namedPipeWriter.WriteMessage(udpReader.GetMessageType(), udpReader.GetSpawnMessage());
                 namedPipeWriter.Write(udpReader.GetMessageType());
                 namedPipeWriter.Write(udpReader.GetSpawnMessage());
                 break;
             }
-            case SPAWN: {
-//                namedPipeWriter.WriteMessage(udpReader.GetMessageType(), udpReader.GetClientId());
+            case RESPAWN_ACK: {
                 namedPipeWriter.Write(udpReader.GetMessageType());
                 namedPipeWriter.Write(udpReader.GetClientId());
                 break;
             }
-            case _ERROR: {
+            case ERROR_OBJECT_DOES_NOT_EXIST: {
                 namedPipeWriter.Write(udpReader.GetMessageType());
                 namedPipeWriter.Write(udpReader.GetErrorType());
-                if (udpReader.GetErrorTypeHost() == ErrorType::OBJECT_DOES_NOT_EXIST) {
-                    namedPipeWriter.Write(htonll(udpReader.GetSenderClientId()));
-                    namedPipeWriter.Write(udpReader.GetClientId());
-                }
+                namedPipeWriter.Write(htonll(udpReader.GetSenderClientId()));
+                namedPipeWriter.Write(udpReader.GetClientId());
             }
             default: {
                 break;
             }
         }
+
+        namedPipeWriterMutex.unlock();
     }
 }

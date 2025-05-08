@@ -3,12 +3,12 @@
 #define NAMEDPIPEWRITER_H
 
 #ifdef __linux__
-typedef int HANDLE;
-typedef unsigned int WINBOOL;
+#include <unistd.h>
 #elif _WIN32
 #include <ws2tcpip.h>
+#include <windows.h>
+#include <winsock2.h>
 #endif
-#include <unistd.h>
 
 #include <iostream>
 #include <string>
@@ -16,10 +16,12 @@ typedef unsigned int WINBOOL;
 #include "Assets/MessageType.h"
 
 class NamedPipeWriter {
+#ifdef __linux__
+    int hPipe;
+    ssize_t result = 0;
+#elif _WIN32
     HANDLE hPipe;
-    WINBOOL result = 0;
-
-#ifdef _WIN32
+    int result = 0;
     DWORD dwWritten = 0;
 #endif
 

@@ -48,6 +48,8 @@ public:
 
     void RemoveClient(uint64_t clientId);
 
+    void SendErrorMessage(const std::string& ip, const std::string& port, MessageType messageType);
+
     template <typename T>
     void SendUdpMessage(uint64_t clientId, MessageType messageType, T message) {
         if (addrinfoMap.empty()) {
@@ -143,7 +145,7 @@ public:
     }
 
     template <typename T>
-    void MulticastSpawnPlayerMessage(MessageType messageType, T message, const std::u16string& playerName) {
+    void MulticastSpawnPlayerMessage(MessageType messageType, T& message, uint16_t length, const std::u16string& playerName) {
         if (addrinfoMap.empty()) {
             return;
         }
@@ -152,7 +154,7 @@ public:
 
         buffer.Write(messageType);
         buffer.Write(message);
-        buffer.Write(htons((uint16_t)playerName.length()));
+        buffer.Write(length);
         buffer.WriteString(playerName);
 
         for (auto addr_info : addrinfoMap) {

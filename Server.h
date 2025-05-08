@@ -25,15 +25,18 @@ private:
     WSAData wsaData{};
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
-    const time_t timeOutLimit = 5; // sec
+    const std::time_t timeOutLimit = 5; // seconds
 
     std::mutex lastReceivedMessageMapMutex{};
     std::map<uint64_t, time_t> lastReceivedMessageMap;
+    std::mutex connectQueueMutex{};
     std::queue<Player> connectQueue{};
 
     // Named pipes
     NamedPipeReader namedPipeReader = NamedPipeReader();
     NamedPipeWriter namedPipeWriter = NamedPipeWriter();
+
+    std::mutex namedPipeWriterMutex{};
 
     std::future<void> checkTimeoutAsyncTask;
     std::future<void> receiveUdpAsyncTask;
