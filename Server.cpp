@@ -148,8 +148,11 @@ void Server::CheckTimeOut() {
                 namedPipeReader.ReadString(ntohs(length), playerName);
 
                 Player player = connectQueue.front();
+                connectQueue.pop();
 
-                udpWriter.AddClient(player.ip, player.port, ntohll(spawnMessage.clientId));
+                if (!udpWriter.AddClient(player.ip, player.port, ntohll(spawnMessage.clientId))) {
+                    break;
+                }
                 udpReader.AddClient(player.ip, player.port, ntohll(spawnMessage.clientId));
 
                 lastReceivedMessageMapMutex.lock();
@@ -158,7 +161,6 @@ void Server::CheckTimeOut() {
                 }
                 lastReceivedMessageMapMutex.unlock();
 
-                connectQueue.pop();
                 udpWriter.MulticastSpawnPlayerMessage(messageType, spawnMessage, length, playerName);
                 break;
             }

@@ -7,19 +7,14 @@
 #ifdef __linux__
 void UDPWriter::SetSocket(int newSocket) {
     writeSocket = newSocket;
-    FD_ZERO(&currentwritefds);
-    FD_SET(writeSocket, &currentwritefds);
 }
 #elif _WIN32
 void UDPWriter::SetSocket(SOCKET newSocket) {
     writeSocket = newSocket;
-    FD_ZERO(&currentwritefds);
-    FD_SET(writeSocket, &currentwritefds);
 }
 #endif
 
-void UDPWriter::AddClient(const std::string& ip, const std::string& port, uint64_t clientId) {
-    std::cout << ip << ":" << port << " " << clientId << std::endl;
+bool UDPWriter::AddClient(const std::string& ip, const std::string& port, uint64_t clientId) {
     addrinfo hints{}, *servinfo;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
@@ -32,8 +27,11 @@ void UDPWriter::AddClient(const std::string& ip, const std::string& port, uint64
         addrinfoMap[clientId] = servinfo;
         packageIdMap[clientId] = 0;
     } else {
-        std::cout << "Error when adding client, error code: " << rv << std::endl; // TODO
+        std::cout << "Error when adding client, error code: " << rv << std::endl;
+        return false;
     }
+
+    return true;
 }
 
 void UDPWriter::RemoveClient(uint64_t clientId) {
@@ -50,7 +48,7 @@ void UDPWriter::SendUDPPackage(addrinfo* adddr) {
         return;
     }
 
-    if (FD_ISSET(socket, &writefds)) {
+    if (FD_ISSET(writeSocket, &writefds)) {
         sendto(writeSocket, buffer.GetBuffer(), buffer.GetSize(), 0, adddr->ai_addr, adddr->ai_addrlen);
     }
 }
