@@ -6,12 +6,12 @@
 #include "NetworkHostConversion.h"
 
 #ifdef __linux__
-void UDPReader::SetSocket(int socket) {
-    listenSocket = socket;
+void UDPReader::SetSocket(int newSocket) {
+    listenSocket = newSocket;
 }
 #elif _WIN32
-void UDPReader::SetSocket(SOCKET socket) {
-    listenSocket = socket;
+void UDPReader::SetSocket(SOCKET newSocket) {
+    listenSocket = newSocket;
 }
 #endif
 

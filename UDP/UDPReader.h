@@ -74,9 +74,9 @@ class UDPReader {
 
 public:
 #ifdef __linux__
-    void SetSocket(int socket);
+    void SetSocket(int newSocket);
 #elif _WIN32
-    void SetSocket(SOCKET socket);
+    void SetSocket(SOCKET newSocket);
 #endif
 
     void AddClient(const std::string& ip, const std::string& port, uint64_t clientId);

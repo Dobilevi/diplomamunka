@@ -25,7 +25,6 @@ class UDPWriter {
     Buffer buffer = Buffer(256); // TODO: size?
 
     fd_set writefds;
-    fd_set currentwritefds;
 #ifdef __linux__
     int writeSocket;
 #elif _WIN32
@@ -37,12 +36,12 @@ class UDPWriter {
 
 public:
 #ifdef __linux__
-    void SetSocket(int socket);
+    void SetSocket(int newSocket);
 #elif _WIN32
-    void SetSocket(SOCKET socket);
+    void SetSocket(SOCKET newSocket);
 #endif
 
-    void AddClient(const std::string& ip, const std::string& port, uint64_t clientId);
+    bool AddClient(const std::string& ip, const std::string& port, uint64_t clientId);
     void RemoveClient(uint64_t clientId);
 
     void SendUDPPackage(addrinfo* adddr);
