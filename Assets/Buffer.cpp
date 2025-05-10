@@ -52,7 +52,7 @@ void Buffer::ReadString(std::u16string& out, uint16_t length, uint16_t maxLength
     CheckSize(sizeof(char16_t) * length);
 
     char16_t* value = new char16_t[length + 1];
-    char16_t nul = 0;
+    const char16_t nul = 0;
     std::memcpy(value + length, &nul, sizeof(char16_t));
     std::memcpy(value, buffer + index, sizeof(char16_t) * length);
     out = value;

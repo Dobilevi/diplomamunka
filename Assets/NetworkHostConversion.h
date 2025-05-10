@@ -4,34 +4,8 @@
 
 #include "MessageType.h"
 
-#ifdef __linux__
-uint32_t htonf();
-uint32_t ntohf();
-#endif
+uint64_t htonll(uint64_t value);
 
-#if __BIG_ENDIAN__
-# define htonll(x) (x)
-# define ntohll(x) (x)
-#else
-# define htonll(x) (((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
-# define ntohll(x) (((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
-#endif
-
-void UpdateMessageHostToNetwork(UpdateMessage& updateMessage);
-
-void UpdateMessageNetworkToHost(UpdateMessage& updateMessage);
-
-void SpawnProjectileMessageHostToNetwork(SpawnProjectileMessage& spawnProjectileMessage);
-
-void SpawnProjectileMessageNetworkToHost(SpawnProjectileMessage& spawnProjectileMessage);
-
-void DespawnMessageHostToNetwork(DespawnMessage& despawnMessage);
-
-void DespawnMessageNetworkToHost(DespawnMessage& despawnMessage);
-
-void SpawnMessageHostToNetwork(SpawnMessage& spawnMessage);
-
-void SpawnMessageNetworkToHost(SpawnMessage& spawnMessage);
-
+uint64_t ntohll(uint64_t value);
 
 #endif  // NETWORK_HOST_CONVERSION_H

@@ -6,7 +6,7 @@
 #include <cstring>
 #include <iostream>
 
-#include <sys/types.h>
+#include <sys/types.h> // TODO: remove?
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -76,7 +76,8 @@ uint16_t NamedPipeReader::ReadPort() {
 }
 
 void NamedPipeReader::ReadString(uint16_t length, std::u16string& out) {
-    char16_t buffer[256];
+    char16_t buffer[64]; // TODO: Fix size?
+
 #ifdef __linux__
     if ((result = read(hPipe, &buffer, sizeof(char16_t) * length)) < 0) {
         throw std::runtime_error(strerror(errno));
@@ -92,7 +93,8 @@ void NamedPipeReader::ReadString(uint16_t length, std::u16string& out) {
         }
     }
 #endif
-    buffer[length] = '\0';
+    const char16_t nul = 0;
+    std::memcpy(buffer + length, &nul, sizeof(char16_t));
 
     out = buffer;
 }

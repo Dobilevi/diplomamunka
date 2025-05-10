@@ -4,19 +4,17 @@
 #include <iostream>
 
 
-UDPWriter::UDPWriter() {
-    FD_ZERO(&currentwritefds);
-}
-
 #ifdef __linux__
 void UDPWriter::SetSocket(int newSocket) {
-    socket = newSocket;
-    FD_SET(socket, &currentwritefds);
+    writeSocket = newSocket;
+    FD_ZERO(&currentwritefds);
+    FD_SET(writeSocket, &currentwritefds);
 }
 #elif _WIN32
 void UDPWriter::SetSocket(SOCKET newSocket) {
-    socket = newSocket;
-    FD_SET(socket, &currentwritefds);
+    writeSocket = newSocket;
+    FD_ZERO(&currentwritefds);
+    FD_SET(writeSocket, &currentwritefds);
 }
 #endif
 
@@ -33,16 +31,38 @@ void UDPWriter::AddClient(const std::string& ip, const std::string& port, uint64
     if (rv == 0) {
         addrinfoMap[clientId] = servinfo;
         packageIdMap[clientId] = 0;
-        std::cout <<"clientId: " << clientId << std::endl;
     } else {
-        std::cout << "Error when adding client, error code: " << rv << std::endl;
+        std::cout << "Error when adding client, error code: " << rv << std::endl; // TODO
     }
 }
 
 void UDPWriter::RemoveClient(uint64_t clientId) {
-    std::cout << "Removing: client: " << clientId << ", clientId: " << clientId << std::endl;
     addrinfoMap.erase(clientId);
     packageIdMap.erase(clientId);
+}
+
+void UDPWriter::SendUDPPackage(addrinfo* adddr) {
+    FD_ZERO(&writefds);
+    FD_SET(writeSocket, &writefds);
+
+    if (select(writeSocket + 1, nullptr, &writefds, nullptr, nullptr) == -1) {
+        // An error occurred
+        return;
+    }
+
+    if (FD_ISSET(socket, &writefds)) {
+        sendto(writeSocket, buffer.GetBuffer(), buffer.GetSize(), 0, adddr->ai_addr, adddr->ai_addrlen);
+    }
+}
+
+void UDPWriter::MulticastUDPPackage() {
+    uint64_t packageId;
+    for (auto addr_info : addrinfoMap) {
+        packageId = htonll(++packageIdMap[addr_info.first]);
+        std::memcpy(buffer.GetBuffer(), &packageId, sizeof(uint64_t));
+
+        SendUDPPackage(addr_info.second);
+    }
 }
 
 void UDPWriter::SendErrorMessage(const std::string& ip, const std::string& port, MessageType messageType) {
@@ -52,10 +72,9 @@ void UDPWriter::SendErrorMessage(const std::string& ip, const std::string& port,
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
 
-    int rv = getaddrinfo(ip.c_str(), port.c_str(), &hints, &servinfo);
-
-    if (rv == 0) {
-
+    if (getaddrinfo(ip.c_str(), port.c_str(), &hints, &servinfo) != 0) {
+        // An error occurred
+        return;
     }
 
     buffer.Reset();
@@ -63,19 +82,5 @@ void UDPWriter::SendErrorMessage(const std::string& ip, const std::string& port,
     buffer.Write(htonll((uint64_t)0));
     buffer.Write(messageType);
 
-    FD_ZERO(&writefds);
-    FD_SET(socket, &writefds);
-
-    select(socket + 1, nullptr, &writefds, nullptr, nullptr);
-
-    if (FD_ISSET(socket, &writefds)) {
-        int result = sendto(socket, buffer.GetBuffer(), buffer.GetSize(), 0, servinfo->ai_addr, servinfo->ai_addrlen);
-
-        if (result == -1) {
-            printf("SendUdpMessage Error: %d\n", errno);
-        }
-    } else {
-        // Timed out
-        printf("SendUdpMessage TIMEOUT: socket: %llu!\n", socket);
-    }
+    SendUDPPackage(servinfo);
 }
