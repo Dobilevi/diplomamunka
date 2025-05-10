@@ -51,24 +51,6 @@ class NamedPipeWriter {
         result = WriteFile(hPipe, message.c_str(), message.length() * sizeof(char16_t), &dwWritten, nullptr);
 #endif
     }
-
-    void WriteConnectMessage(const MessageType messageType, const uint16_t length, const std::u16string& message) {
-#ifdef __linux__
-        result = write(hPipe, &messageType, sizeof(MessageType));
-
-//        result = write(hPipe, &clientId, sizeof(uint64_t));
-
-        result = write(hPipe, &length, sizeof(uint16_t));
-
-        result = write(hPipe, message.c_str(), length * sizeof(char16_t));
-#elif _WIN32
-        result = WriteFile(hPipe, &messageType, sizeof(MessageType), &dwWritten, nullptr);
-
-        result = WriteFile(hPipe, &length, sizeof(uint16_t), &dwWritten, nullptr);
-
-        result = WriteFile(hPipe, message.c_str(), length * sizeof(char16_t), &dwWritten, nullptr);
-#endif
-    }
 };
 
 #endif  // NAMEDPIPEWRITER_H

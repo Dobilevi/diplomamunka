@@ -2,14 +2,14 @@
 #include "NamedPipeWriter.h"
 
 #include <chrono>
-#include <cstring>
-#include <iostream>
+#include <cstring> // TODO
+#include <iostream> // TODO
 #include <thread>
 
-#include <sys/types.h>  // mkfifo
 #include <fcntl.h>
 
 #ifdef __linux__
+#include <sys/types.h>  // mkfifo
 #include <sys/stat.h>   // mkfifo
 #endif
 
@@ -18,8 +18,6 @@ NamedPipeWriter::NamedPipeWriter() {
 
 #ifdef __linux__
     hPipe = mkfifo("/tmp/CppPipe", S_IWUSR | S_IRUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
-    printf("%d\n", hPipe);
-    printf("%s\n", strerror(errno));
 
     if ((hPipe = open("/tmp/CppPipe", O_WRONLY)) < 0) {
         printf("%s\n", strerror(errno));

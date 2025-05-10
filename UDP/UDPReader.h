@@ -31,17 +31,15 @@ class UDPReader {
 #elif _WIN32
     SOCKET listenSocket = 0;
 #endif
-    struct sockaddr_in listenAddr{};
-
     fd_set readfds{};
 
     sockaddr address{};
-    Buffer buffer;
+    Buffer buffer = Buffer(256); // TODO: size?
 
     std::string ip;
     std::string port;
 
-    //
+    // Raw value storage
     uint64_t packageIdNetwork{};
     uint16_t messageTypeNetwork = 0;
     uint16_t errorTypeNetwork = 0;
@@ -51,6 +49,7 @@ class UDPReader {
     SpawnProjectileMessage spawnMessageNetwork{};
     UpdateMessage updateMessageNetwork{};
 
+    // Converted value storage
     uint64_t packageIdHost{};
     MessageType messageTypeHost = MessageType::NONE;
     uint16_t lengthHost = 0;
@@ -74,49 +73,36 @@ class UDPReader {
     static const uint16_t maxPlayerNameLength = 32;
 
 public:
-    UDPReader(uint16_t port);
-
 #ifdef __linux__
-    int GetSocket() const;
+    void SetSocket(int socket);
 #elif _WIN32
-    SOCKET GetSocket() const;
+    void SetSocket(SOCKET socket);
 #endif
 
     void AddClient(const std::string& ip, const std::string& port, uint64_t clientId);
-
     void RemoveClient(uint64_t clientId);
 
     bool IsConnected(const std::string& ip, const std::string& port);
     bool IsConnected(const std::string& ip, const std::string& port, uint64_t clientId);
 
+    void CheckPackageId();
+
     void ReadUdpPackage();
-
     void ReadMessage();
+    void ProcessMessage();
 
+    const std::string& GetIPAddress() const;
+    const std::string& GetPortNumber() const;
     uint64_t GetSenderClientId() const;
 
     uint64_t GetPackageId() const;
-
     uint16_t GetMessageType() const;
-
     MessageType GetMessageTypeHost() const;
-
     uint16_t GetErrorType() const;
-
-    const std::string& GetIPAddress() const;
-
-    const std::string& GetPortNumber() const;
-
     uint64_t GetClientId() const;
-
     uint64_t GetClientIdHost() const;
-
-    uint64_t GetProjectileId() const;
-
     const std::u16string& GetPlayerName() const;
-
     const UpdateMessage& GetUpdateMessage() const;
-
     const SpawnProjectileMessage& GetSpawnMessage() const;
 };
 

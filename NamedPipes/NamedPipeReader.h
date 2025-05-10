@@ -26,6 +26,7 @@ public:
     virtual ~NamedPipeReader();
 
     uint16_t ReadPort();
+    void ReadString(uint16_t length, std::u16string& out);
 
     template <typename T>
     void Read(T& out) {
@@ -45,8 +46,6 @@ public:
         }
 #endif
     }
-
-    void ReadString(uint16_t length, std::u16string& out);
 };
 
 #endif  // NAMEDPIPEREADER_H

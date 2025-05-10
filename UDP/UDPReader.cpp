@@ -1,43 +1,17 @@
 
 #include "UDPReader.h"
 
-#include <cassert>
 #include <iostream>
-
-#include <ws2tcpip.h>
 
 #include "NetworkHostConversion.h"
 
-
-UDPReader::UDPReader(uint16_t port) : buffer(256) {
-    std::cout << "Port: " << port << std::endl;
-    listenSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
 #ifdef __linux__
-    assert(listenSocket != -1);
-#elif _WIN32
-    assert(listenSocket != INVALID_SOCKET);
-#endif
-
-    listenAddr.sin_addr.s_addr = inet_addr("0.0.0.0");
-    listenAddr.sin_family = AF_INET;
-    listenAddr.sin_port = htons(port);
-
-    int result = bind(listenSocket, (sockaddr*)&listenAddr, sizeof(listenAddr));
-#ifdef __linux__
-    assert(result != -1);
-#elif _WIN32
-    assert(result != SOCKET_ERROR);
-#endif
-}
-
-#ifdef __linux__
-int UDPReader::GetSocket() const {
-    return listenSocket;
+void UDPReader::SetSocket(int socket) {
+    listenSocket = socket;
 }
 #elif _WIN32
-SOCKET UDPReader::GetSocket() const {
-    return listenSocket;
+void UDPReader::SetSocket(SOCKET socket) {
+    listenSocket = socket;
 }
 #endif
 
@@ -99,8 +73,8 @@ void UDPReader::ReadUdpPackage() {
     }
 
     if (FD_ISSET(listenSocket, &readfds)) {
-        static uint16_t size = 256;
-        static UDP udp;
+        const uint16_t size = 256; // TODO: size?
+        UDP udp;
         udp = { size, new char[size] };
 
         socklen_t fromlen = sizeof(address);
@@ -120,12 +94,10 @@ void UDPReader::ReadUdpPackage() {
             udpQueue.push(udp);
         }
         udpQueueMutex.unlock();
-
     }
 }
 
 void UDPReader::ReadMessage() {
-    static UDP udp;
     while (true) {
         udpQueueMutex.lock();
         if (!udpQueue.empty()) {
@@ -133,7 +105,8 @@ void UDPReader::ReadMessage() {
         }
         udpQueueMutex.unlock();
     }
-    udp = udpQueue.front();
+
+    UDP udp = udpQueue.front();
     udpQueue.pop();
     udpQueueMutex.unlock();
 
@@ -143,109 +116,118 @@ void UDPReader::ReadMessage() {
     buffer.SetBuffer(udp.buffer, udp.size);
 
     try {
-        buffer.Read(packageIdNetwork);
-        packageIdHost = ntohll(packageIdNetwork);
-        buffer.Read(messageTypeNetwork);
-        messageTypeHost = (MessageType)ntohs(messageTypeNetwork);
-
-        if (messageTypeHost != CONNECT) {
-            if (packageIdMap.find(ip) != packageIdMap.end()) {
-                if (packageIdMap[ip].find(port) != packageIdMap[ip].end()) {
-                    if (packageIdHost <= packageIdMap[ip][port]) {
-                        std::cout << "Received past package!" << std::endl;
-                        messageTypeHost = NONE;
-                        return;
-                    } else {
-                        packageIdMap[ip][port] = packageIdHost;
-                    }
-                }
-            }
-        }
-
-        switch (messageTypeHost) {
-            case CONNECT: {
-                buffer.Read(lengthNetwork);
-                lengthHost = ntohs(lengthNetwork);
-                buffer.ReadString(playerNameNetwork, lengthHost, maxPlayerNameLength);
-                if (IsConnected(ip, port)) {
-                    messageTypeHost = NONE;
-                    return;
-                }
-                if (waitingMap.find(ip) != waitingMap.end()) {
-                    if (waitingMap[ip].find(port) != waitingMap[ip].end()) {
-                        messageTypeHost = NONE;
-                        return;
-                    }
-                }
-                waitingMap[ip][port] = true;
-                //                m_clientId = Player::GetNextClientId();
-                //                connectionMap[ip][port][m_clientId] = Player(ip, port, m_clientId, "Default name");
-
-                break;
-            }
-            case DISCONNECT: {
-                buffer.Read(m_clientIdNetwork);
-                m_clientIdHost = ntohll(m_clientIdNetwork);
-                if (!IsConnected(ip, port, m_clientIdHost)) {
-                    messageTypeHost = NONE;
-                    break;
-                }
-                //            connectionMap[ip].erase(port);
-                //            packageIdMap[ip].erase(port);
-                //            printf("Disconnected: %s:%s with id %llu\n", ip.c_str(), port.c_str(), m_clientIdHost);
-                break;
-            }
-            case SPAWN_PROJECTILE: {
-                buffer.Read(spawnMessageNetwork);
-                m_clientIdHost = ntohll(spawnMessageNetwork.clientId);
-                if (!IsConnected(ip, port, m_clientIdHost)) {
-                    messageTypeHost = NONE;
-                }
-                break;
-            }
-            case UPDATE: {
-                buffer.Read(updateMessageNetwork);
-                m_clientIdHost = ntohll(updateMessageNetwork.clientId);
-                if (!IsConnected(ip, port, m_clientIdHost)) {
-                    printf("Not connected: %s: %llu\n", ip.c_str(),
-                           m_clientIdHost);
-                    for (auto ip : connectionMap) {
-                        for (auto port : ip.second) {
-                            printf("%s:%s -> %llu\n", ip.first.c_str(),
-                                   port.first.c_str(), port.second);
-                        }
-                    }
-                    messageTypeHost = NONE;
-                }
-                break;
-            }
-            case RESPAWN_ACK: {
-                buffer.Read(m_clientIdNetwork);
-                m_clientIdHost = ntohll(m_clientIdNetwork);
-
-                if (!IsConnected(ip, port, m_clientIdHost)) {
-                    messageTypeHost = NONE;
-                    break;
-                }
-                break;
-            }
-            case ERROR_OBJECT_DOES_NOT_EXIST: {
-                buffer.Read(errorTypeNetwork);
-                buffer.Read(m_clientIdNetwork);
-                break;
-            }
-            default: {
-                messageTypeHost = NONE;
-                break;
-            }
-        }
+        ProcessMessage();
     } catch (const std::runtime_error& error) {
         messageTypeHost = NONE;
     }
+}
 
-//    } else {
-//        // Timeout
-//    }
+void UDPReader::CheckPackageId() {
+    if (messageTypeHost != CONNECT) {
+        if (packageIdMap.find(ip) != packageIdMap.end()) {
+            if (packageIdMap[ip].find(port) != packageIdMap[ip].end()) {
+                if (packageIdHost <= packageIdMap[ip][port]) {
+                    // Received past package
+                    messageTypeHost = NONE;
+                    throw std::runtime_error("Received past package!");
+                } else {
+                    packageIdMap[ip][port] = packageIdHost;
+                }
+            }
+        }
+    }
+}
+
+void UDPReader::ProcessMessage() {
+    buffer.Read(packageIdNetwork);
+    packageIdHost = ntohll(packageIdNetwork);
+
+    buffer.Read(messageTypeNetwork);
+    messageTypeHost = (MessageType)ntohs(messageTypeNetwork);
+
+    CheckPackageId();
+
+    switch (messageTypeHost) {
+        case CONNECT: {
+            buffer.Read(lengthNetwork);
+            lengthHost = ntohs(lengthNetwork);
+            buffer.ReadString(playerNameNetwork, lengthHost, maxPlayerNameLength);
+            if (IsConnected(ip, port)) {
+                messageTypeHost = NONE;
+                return;
+            }
+            if (waitingMap.find(ip) != waitingMap.end()) {
+                if (waitingMap[ip].find(port) != waitingMap[ip].end()) {
+                    messageTypeHost = NONE;
+                    return;
+                }
+            }
+            waitingMap[ip][port] = true;
+
+            break;
+        }
+        case DISCONNECT: {
+            buffer.Read(m_clientIdNetwork);
+            m_clientIdHost = ntohll(m_clientIdNetwork);
+
+            if (!IsConnected(ip, port, m_clientIdHost)) {
+                messageTypeHost = NONE;
+                break;
+            }
+
+            break;
+        }
+        case SPAWN_PROJECTILE: {
+            buffer.Read(spawnMessageNetwork);
+            m_clientIdHost = ntohll(spawnMessageNetwork.clientId);
+
+            if (!IsConnected(ip, port, m_clientIdHost)) {
+                messageTypeHost = NONE;
+                break;
+            }
+
+            break;
+        }
+        case UPDATE: {
+            buffer.Read(updateMessageNetwork);
+            m_clientIdHost = ntohll(updateMessageNetwork.clientId);
+
+            if (!IsConnected(ip, port, m_clientIdHost)) {
+                messageTypeHost = NONE;
+            }
+
+            break;
+        }
+        case RESPAWN_ACK: {
+            buffer.Read(m_clientIdNetwork);
+            m_clientIdHost = ntohll(m_clientIdNetwork);
+
+            if (!IsConnected(ip, port, m_clientIdHost)) {
+                messageTypeHost = NONE;
+                break;
+            }
+
+            break;
+        }
+        case ERROR_OBJECT_DOES_NOT_EXIST: {
+            buffer.Read(errorTypeNetwork);
+            buffer.Read(m_clientIdNetwork);
+
+            break;
+        }
+        default: {
+            messageTypeHost = NONE;
+            break;
+        }
+    }
+}
+
+const std::string& UDPReader::GetIPAddress() const {
+    return ip;
+}
+
+const std::string& UDPReader::GetPortNumber() const {
+    return port;
 }
 
 uint64_t UDPReader::GetSenderClientId() const {
@@ -266,14 +248,6 @@ MessageType UDPReader::GetMessageTypeHost() const {
 
 uint16_t UDPReader::GetErrorType() const {
     return errorTypeNetwork;
-}
-
-const std::string& UDPReader::GetIPAddress() const {
-    return ip;
-}
-
-const std::string& UDPReader::GetPortNumber() const {
-    return port;
 }
 
 uint64_t UDPReader::GetClientId() const {

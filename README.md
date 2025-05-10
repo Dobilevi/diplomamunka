@@ -17,9 +17,8 @@ mkdir build
 cd build
 cmake ..
 cmake --build .
-
 ```
 
+## clang-format
 
-
-
+<!-- TODO -->
