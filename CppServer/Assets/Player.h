@@ -5,8 +5,6 @@
 #include <set>
 #include <string>
 
-#include <inaddr.h>
-
 struct Player {
     std::string ip;
     std::string port;

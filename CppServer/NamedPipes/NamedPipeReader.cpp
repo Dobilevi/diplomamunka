@@ -6,14 +6,12 @@
 #include <cstring>
 #include <iostream>
 
-#include <sys/types.h> // TODO: remove?
 #include <sys/stat.h>
 #include <fcntl.h>
 
 #ifdef __linux__
 #include <unistd.h>
-#elif _WIN32
-
+#include <arpa/inet.h>
 #endif
 
 
@@ -24,7 +22,7 @@ NamedPipeReader::NamedPipeReader() {
     printf("%s\n", strerror(errno));
     sleep(1);
     if ((hPipe = open("/tmp/CsharpPipe", O_RDONLY)) < 0) {
-        printf("%s\n", strerror(errno));
+        printf("%s\n", std::strerror(errno));
         return;
     }
 #elif _WIN32
@@ -58,7 +56,7 @@ uint16_t NamedPipeReader::ReadPort() {
 
 #ifdef __linux__
     if ((result = read(hPipe, &out, sizeof(uint16_t))) < 0) {
-        throw std::runtime_error(strerror(errno));
+        throw std::runtime_error(std::strerror(errno));
     }
 #elif _WIN32
     DWORD dwRead;
@@ -80,7 +78,7 @@ void NamedPipeReader::ReadString(uint16_t length, std::u16string& out) {
 
 #ifdef __linux__
     if ((result = read(hPipe, &buffer, sizeof(char16_t) * length)) < 0) {
-        throw std::runtime_error(strerror(errno));
+        throw std::runtime_error(std::strerror(errno));
     }
 #elif _WIN32
     DWORD dwRead;

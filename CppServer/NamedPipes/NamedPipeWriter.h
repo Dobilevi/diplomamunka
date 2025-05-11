@@ -4,6 +4,7 @@
 
 #ifdef __linux__
 #include <unistd.h>
+#include <arpa/inet.h>
 #elif _WIN32
 #include <ws2tcpip.h>
 #include <windows.h>
