@@ -254,9 +254,9 @@ public class NetworkManagerServer : MonoBehaviour
         {
 #if UNITY_EDITOR_WIN
             Process.Start(@"..\CppServer\build\Debug\CppServer.exe");
-#elif UNITY_EDITOR_LINUX
+#elif UNITY_STANDALONE_WIN
             Process.Start(@"..\..\..\CppServer\build\Debug\CppServer.exe");
-#elif UNITY_EDITOR_OSX
+#elif UNITY_EDITOR_LINUX
             Process.Start("../CppServer/build/CppServer");
 #elif UNITY_STANDALONE_LINUX
             Process.Start("../../../CppServer/build/CppServer");

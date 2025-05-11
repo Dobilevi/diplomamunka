@@ -42,7 +42,7 @@ public class GameManager : MonoBehaviour
     public string serverAddress = NetConstants.defaultServerAddress;
     public int serverPort = NetConstants.defaultServerPort;
     public int port = NetConstants.defaultServerPort;
-    public int botCount = 1;
+    public int botCount = 0;
     public int maxPlayers = 10;
     public int aiControlled = 0;
 
