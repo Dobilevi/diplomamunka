@@ -1,0 +1,12 @@
+
+CppServer/cmake-build-debug
+
+UnityGame/.idea
+UnityGame/Library
+UnityGame/Logs
+UnityGame/obj
+UnityGame/Screenshots
+UnityGame/Temp
+UnityGame/UserSettings
+UnityGame/Assembly-CSharp.csproj
+UnityGame/UnityGame.sln
