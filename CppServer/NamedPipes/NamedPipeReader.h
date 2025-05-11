@@ -2,11 +2,11 @@
 #ifndef NAMEDPIPEREADER_H
 #define NAMEDPIPEREADER_H
 
+#include <stdexcept>
+#include <cstring>
+
 #if _WIN32
 #include <ws2tcpip.h>
-
-#include <stdexcept>
-#include <string>
 #endif
 
 #include "Assets/MessageType.h"
@@ -32,7 +32,7 @@ public:
     void Read(T& out) {
 #ifdef __linux__
         if ((result = read(hPipe, &out, sizeof(T))) < 0) {
-            throw std::runtime_error(strerror(errno));
+            throw std::runtime_error(std::strerror(errno));
         }
 #elif _WIN32
         DWORD dwRead;

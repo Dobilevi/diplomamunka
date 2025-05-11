@@ -20,7 +20,7 @@ NamedPipeWriter::NamedPipeWriter() {
     hPipe = mkfifo("/tmp/CppPipe", S_IWUSR | S_IRUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
     if ((hPipe = open("/tmp/CppPipe", O_WRONLY)) < 0) {
-        printf("%s\n", strerror(errno));
+        printf("%s\n", std::strerror(errno));
     }
 #elif _WIN32
     hPipe = CreateFile(TEXT("\\\\.\\pipe\\CppPipe"),

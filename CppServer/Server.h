@@ -18,6 +18,7 @@ class Server {
 private:
 #ifdef __linux__
     int serverSocket = 0;
+    int result;
 #elif _WIN32
     SOCKET serverSocket = 0;
     WSAData wsaData{};
