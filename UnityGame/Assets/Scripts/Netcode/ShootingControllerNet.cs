@@ -105,9 +105,7 @@ public class ShootingControllerNet : NetworkBehaviour
 
             if (fireEffect != null)
             {
-                // var instance = NetworkManager.SpawnManager.InstantiateAndSpawn(fireEffect,  transform.position, transform.rotation);
-                // var instance = Instantiate(fireEffect, projectileHolder.position, projectileHolder.rotation);
-                // instance.GetComponent<NetworkObject>().Spawn();
+                Instantiate(fireEffect,  transform.position, transform.rotation);
             }
 
             // Restart the cooldown
