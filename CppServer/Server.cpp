@@ -7,10 +7,7 @@
 #include <iostream>
 #include <string>
 
-#ifdef __linux__
-#include <unistd.h>
-#include <sys/types.h> // TODO: needed?
-#elif _WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
