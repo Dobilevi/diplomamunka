@@ -4,14 +4,10 @@
 
 #include "MessageType.h"
 
-#include <codecvt>
+//#include <codecvt> // TODO: remove?
 
 #ifdef __linux__
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <arpa/inet.h>
-#include <netinet/in.h>
 #elif _WIN32
 #include <ws2tcpip.h>
 typedef int socklen_t;
