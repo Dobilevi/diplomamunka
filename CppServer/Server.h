@@ -47,7 +47,7 @@ class Server {
 
     // Communication
     [[noreturn]] void ReceiveUDPMessages();
-    [[noreturn]] void ReceiveClientData();
+    [[noreturn]] void ProcessUDPMessages();
     [[noreturn]] void ReceiveServerData();
 
     void CheckTimeOut();

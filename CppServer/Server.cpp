@@ -61,7 +61,7 @@ Server::Server() {
     receiveUdpAsyncTask = std::async(&Server::ReceiveUDPMessages, this);
 
     // Start processing the UDP messages
-    receiveClientUpdateAsyncTask = std::async(&Server::ReceiveClientData, this);
+    receiveClientUpdateAsyncTask = std::async(&Server::ProcessUDPMessages, this);
 
     std::cout << "Server started" << std::endl;
 }
@@ -81,7 +81,7 @@ Server::~Server() {
 
 [[noreturn]] void Server::ReceiveUDPMessages() {
     while (true) {
-        udpReader.ReadUdpPackage();
+        udpReader.ReadUDPPackage();
     }
 }
 
@@ -249,7 +249,7 @@ void Server::CheckTimeOut() {
     }
 }
 
-[[noreturn]] void Server::ReceiveClientData() {
+[[noreturn]] void Server::ProcessUDPMessages() {
     while (true) {
         udpReader.ReadMessage();
 

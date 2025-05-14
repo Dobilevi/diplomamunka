@@ -83,7 +83,7 @@ class UDPReader {
 
     void CheckPackageId();
 
-    void ReadUdpPackage();
+    void ReadUDPPackage();
     void ReadMessage();
     void ProcessMessage();
 

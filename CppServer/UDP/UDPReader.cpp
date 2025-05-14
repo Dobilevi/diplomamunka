@@ -65,7 +65,7 @@ bool UDPReader::IsConnected(const std::string& ip, const std::string& port) {
     return isConnected;
 }
 
-void UDPReader::ReadUdpPackage() {
+void UDPReader::ReadUDPPackage() {
     FD_ZERO(&readfds);
     FD_SET(listenSocket, &readfds);
 
