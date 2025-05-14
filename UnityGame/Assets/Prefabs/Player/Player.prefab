@@ -227,6 +227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   teamId: 0
+  clientId: 0
   defaultHealth: 1
   maximumHealth: 1
   currentHealth: 1

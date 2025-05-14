@@ -14,7 +14,7 @@ class Buffer {
 
     void CheckSize(uint16_t length) const;
 
-public:
+   public:
     Buffer(uint16_t size = 256);
 
     ~Buffer();

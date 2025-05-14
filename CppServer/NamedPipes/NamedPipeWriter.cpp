@@ -1,38 +1,35 @@
 
 #include "NamedPipeWriter.h"
 
-#include <chrono>
-#include <cstring> // TODO
-#include <iostream> // TODO
-#include <thread>
-
 #include <fcntl.h>
 
+#include <chrono>
+#include <cstring>   // TODO
+#include <iostream>  // TODO
+#include <thread>
+
 #ifdef __linux__
-#include <sys/types.h>  // mkfifo
 #include <sys/stat.h>   // mkfifo
+#include <sys/types.h>  // mkfifo
 #endif
 
 NamedPipeWriter::NamedPipeWriter() {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 #ifdef __linux__
-    hPipe = mkfifo("/tmp/CppPipe", S_IWUSR | S_IRUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
+    writePipe =
+        mkfifo("/tmp/CppPipe", S_IWUSR | S_IRUSR | S_IXUSR | S_IRGRP | S_IWGRP |
+                                   S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
-    if ((hPipe = open("/tmp/CppPipe", O_WRONLY)) < 0) {
+    if ((writePipe = open("/tmp/CppPipe", O_WRONLY)) < 0) {
         printf("%s\n", std::strerror(errno));
     }
 #elif _WIN32
-    hPipe = CreateFile(TEXT("\\\\.\\pipe\\CppPipe"),
-                   GENERIC_WRITE,
-                   0,
-                   nullptr,
-                   OPEN_EXISTING,
-                   0,
-                   nullptr);
+    writePipe = CreateFile(TEXT("\\\\.\\pipe\\CppPipe"), GENERIC_WRITE, 0,
+                           nullptr, OPEN_EXISTING, 0, nullptr);
 
-    while (hPipe == INVALID_HANDLE_VALUE) {
-        if (ConnectNamedPipe(hPipe, nullptr) !=
+    while (writePipe == INVALID_HANDLE_VALUE) {
+        if (ConnectNamedPipe(writePipe, nullptr) !=
             FALSE)  // wait for someone to connect to the pipe
             return;
     }
@@ -41,8 +38,8 @@ NamedPipeWriter::NamedPipeWriter() {
 
 NamedPipeWriter::~NamedPipeWriter() {
 #ifdef __linux__
-    close(hPipe);
+    close(writePipe);
 #elif _WIN32
-    CloseHandle(hPipe);
+    CloseHandle(writePipe);
 #endif
 }

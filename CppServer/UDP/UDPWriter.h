@@ -19,7 +19,7 @@
 #include "NetworkHostConversion.h"
 
 class UDPWriter {
-    Buffer buffer = Buffer(256); // TODO: size?
+    Buffer buffer = Buffer(256);  // TODO: size?
 
     fd_set writefds;
 #ifdef __linux__
@@ -31,19 +31,21 @@ class UDPWriter {
     std::unordered_map<uint64_t, addrinfo*> addrinfoMap{};
     std::unordered_map<uint64_t, uint64_t> packageIdMap{};
 
-public:
+   public:
 #ifdef __linux__
     void SetSocket(int newSocket);
 #elif _WIN32
     void SetSocket(SOCKET newSocket);
 #endif
 
-    bool AddClient(const std::string& ip, const std::string& port, uint64_t clientId);
+    bool AddClient(const std::string& ip, const std::string& port,
+                   uint64_t clientId);
     void RemoveClient(uint64_t clientId);
 
     void SendUDPPackage(addrinfo* adddr);
     void MulticastUDPPackage();
-    void SendErrorMessage(const std::string& ip, const std::string& port, MessageType messageType);
+    void SendErrorMessage(const std::string& ip, const std::string& port,
+                          MessageType messageType);
 
     template <typename T>
     void SendUdpMessage(uint64_t clientId, MessageType messageType, T message) {
@@ -61,7 +63,9 @@ public:
     }
 
     template <typename T>
-    void SendSpawnPlayerUdpMessage(uint64_t clientId, MessageType messageType, T message, const std::u16string& playerName) {
+    void SendSpawnPlayerUdpMessage(uint64_t clientId, MessageType messageType,
+                                   T message,
+                                   const std::u16string& playerName) {
         if (addrinfoMap.empty()) {
             return;
         }
@@ -83,7 +87,7 @@ public:
             return;
         }
 
-        buffer.Reset(sizeof(uint64_t)); // Space for packageId
+        buffer.Reset(sizeof(uint64_t));  // Space for packageId
 
         buffer.Write(messageType);
         buffer.Write(message);
@@ -92,12 +96,14 @@ public:
     }
 
     template <typename T>
-    void MulticastSpawnPlayerMessage(MessageType messageType, T& message, uint16_t length, const std::u16string& playerName) {
+    void MulticastSpawnPlayerMessage(MessageType messageType, T& message,
+                                     uint16_t length,
+                                     const std::u16string& playerName) {
         if (addrinfoMap.empty()) {
             return;
         }
 
-        buffer.Reset(sizeof(uint64_t)); // Space for packageId
+        buffer.Reset(sizeof(uint64_t));  // Space for packageId
 
         buffer.Write(messageType);
         buffer.Write(message);

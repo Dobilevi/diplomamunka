@@ -1,6 +1,6 @@
-#include "Server.h"
-
 #include <iostream>
+
+#include "Server.h"
 
 int main(int argc, char** argv) {
     Server server = Server();

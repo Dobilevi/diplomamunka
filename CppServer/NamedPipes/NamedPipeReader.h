@@ -2,8 +2,8 @@
 #ifndef NAMEDPIPEREADER_H
 #define NAMEDPIPEREADER_H
 
-#include <stdexcept>
 #include <cstring>
+#include <stdexcept>
 
 #if _WIN32
 #include <ws2tcpip.h>
@@ -11,17 +11,16 @@
 
 #include "Assets/MessageType.h"
 
-
 class NamedPipeReader {
 #ifdef __linux__
-    int hPipe;
+    int listenPipe;
     ssize_t result = 0;
 #elif _WIN32
-    HANDLE hPipe;
+    HANDLE listenPipe;
     int result = 0;
 #endif
 
-public:
+   public:
     NamedPipeReader();
     virtual ~NamedPipeReader();
 
@@ -31,7 +30,7 @@ public:
     template <typename T>
     void Read(T& out) {
 #ifdef __linux__
-        if ((result = read(hPipe, &out, sizeof(T))) < 0) {
+        if ((result = read(listenPipe, &out, sizeof(T))) < 0) {
             throw std::runtime_error(std::strerror(errno));
         }
 #elif _WIN32
@@ -39,7 +38,8 @@ public:
 
         DWORD len = sizeof(T);
 
-        if ((result = ReadFile(hPipe, &out, len, &dwRead, nullptr)) != FALSE) {
+        if ((result = ReadFile(listenPipe, &out, len, &dwRead, nullptr)) !=
+            FALSE) {
             if ((dwRead != len) || !result) {
                 throw std::runtime_error("Pipe is closed!");
             }

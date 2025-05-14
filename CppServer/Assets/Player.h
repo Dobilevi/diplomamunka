@@ -12,7 +12,8 @@ struct Player {
     std::u16string nickname;
 
     Player() = default;
-    Player(const std::string& ip, const std::string& port, uint64_t clientId, const std::u16string& nickname);
+    Player(const std::string& ip, const std::string& port, uint64_t clientId,
+           const std::u16string& nickname);
 };
 
 #endif  // PLAYER_H

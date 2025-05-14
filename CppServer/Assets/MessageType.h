@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-enum MessageType: uint16_t {
+enum MessageType : uint16_t {
     NONE = 0,
     EXIT,
     CONNECT,
@@ -21,7 +21,7 @@ enum MessageType: uint16_t {
     ERROR_OBJECT_DOES_NOT_EXIST
 };
 
-enum Spawnable: uint16_t {
+enum Spawnable : uint16_t {
     PLAYER = 0,
     EXISTING_PLAYER,
     ENEMY,
@@ -44,11 +44,7 @@ struct DespawnMessage {
     uint64_t id;
 };
 
-enum UpdateType : uint16_t {
-    MOVE = 0,
-    TELEPORT,
-    RESPAWN
-};
+enum UpdateType : uint16_t { MOVE = 0, TELEPORT, RESPAWN };
 
 struct UpdateMessage {
     UpdateType updateType;

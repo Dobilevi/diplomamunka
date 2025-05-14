@@ -79,7 +79,9 @@ public class NetworkManagerServer : MonoBehaviour
 
     public ulong NextProjectileId => ++nextProjectileId;
 
-    public ulong NextClientId => ++nextClientId;
+    private ulong NextClientId => ++nextClientId;
+
+    private Process cppServer = null;
 
     public void Shoot(GameObject projectile, Spawnable spawnable, ulong projectileId)
     {
@@ -253,13 +255,13 @@ public class NetworkManagerServer : MonoBehaviour
         try
         {
 #if UNITY_EDITOR_WIN
-            Process.Start(@"..\CppServer\build\Debug\CppServer.exe");
+            cppServer = Process.Start(@"..\CppServer\build\Debug\CppServer.exe");
 #elif UNITY_STANDALONE_WIN
-            Process.Start(@"..\..\..\CppServer\build\Debug\CppServer.exe");
+            cppServer = Process.Start(@"..\..\..\CppServer\build\Debug\CppServer.exe");
 #elif UNITY_EDITOR_LINUX
-            Process.Start("../CppServer/build/CppServer");
+            cppServer = Process.Start("../CppServer/build/CppServer");
 #elif UNITY_STANDALONE_LINUX
-            Process.Start("../../../CppServer/build/CppServer");
+            cppServer = Process.Start("../../../CppServer/build/CppServer");
 #endif
         }
         catch (Exception e)
@@ -598,5 +600,8 @@ public class NetworkManagerServer : MonoBehaviour
         pipeServer.Close();
 
         updateTimer.Dispose();
+
+        cppServer.CloseMainWindow();
+        cppServer.Close();
     }
 }

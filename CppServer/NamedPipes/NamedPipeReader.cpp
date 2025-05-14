@@ -1,42 +1,46 @@
 
 #include "NamedPipeReader.h"
 
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
-#include <iostream>
-
-#include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef __linux__
-#include <unistd.h>
-#include <arpa/inet.h>
-#endif
+#include <cstdint>
+#include <iostream>
 
+#ifdef __linux__
+#include <arpa/inet.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <cstdio>
+#endif
 
 NamedPipeReader::NamedPipeReader() {
 #ifdef __linux__
-    hPipe = mkfifo("/tmp/CsharpPipe", S_IWUSR | S_IRUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
-    printf("%d\n", hPipe);
-    printf("%s\n", strerror(errno));
+    listenPipe = mkfifo("/tmp/CsharpPipe", S_IWUSR | S_IRUSR | S_IXUSR |
+                                               S_IRGRP | S_IWGRP | S_IXGRP |
+                                               S_IROTH | S_IWOTH | S_IXOTH);
+
     sleep(1);
-    if ((hPipe = open("/tmp/CsharpPipe", O_RDONLY)) < 0) {
+
+    if ((listenPipe = open("/tmp/CsharpPipe", O_RDONLY)) < 0) {
         printf("%s\n", std::strerror(errno));
         return;
     }
 #elif _WIN32
-    hPipe = CreateNamedPipe(TEXT("\\\\.\\pipe\\CsharpPipe"),
-                            PIPE_ACCESS_DUPLEX,
-                            PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,   // FILE_FLAG_FIRST_PIPE_INSTANCE is not needed but forces CreateNamedPipe(..) to fail if the pipe already exists...
-                            1,
-                            1024 * 16, // TODO
-                            1024 * 16,
-                            NMPWAIT_USE_DEFAULT_WAIT,
-                            nullptr);
+    listenPipe =
+        CreateNamedPipe(TEXT("\\\\.\\pipe\\CsharpPipe"), PIPE_ACCESS_DUPLEX,
+                        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE |
+                            PIPE_WAIT,  // FILE_FLAG_FIRST_PIPE_INSTANCE is not
+                                        // needed but forces CreateNamedPipe(..)
+                                        // to fail if the pipe already exists...
+                        1,
+                        1024 * 16,  // TODO
+                        1024 * 16,  // TODO
+                        NMPWAIT_USE_DEFAULT_WAIT, nullptr);
 
-    while (hPipe != INVALID_HANDLE_VALUE) {
-        if (ConnectNamedPipe(hPipe, nullptr) != FALSE) {  // Wait for someone to connect to the pipe
+    while (listenPipe != INVALID_HANDLE_VALUE) {
+        if (ConnectNamedPipe(listenPipe, nullptr) !=
+            FALSE) {  // Wait for someone to connect to the pipe
             return;
         }
     }
@@ -45,9 +49,9 @@ NamedPipeReader::NamedPipeReader() {
 
 NamedPipeReader::~NamedPipeReader() {
 #ifdef __linux__
-    close(hPipe);
+    close(listenPipe);
 #elif _WIN32
-    DisconnectNamedPipe(hPipe);
+    DisconnectNamedPipe(listenPipe);
 #endif
 }
 
@@ -55,7 +59,7 @@ uint16_t NamedPipeReader::ReadPort() {
     uint16_t out;
 
 #ifdef __linux__
-    if ((result = read(hPipe, &out, sizeof(uint16_t))) < 0) {
+    if ((result = read(listenPipe, &out, sizeof(uint16_t))) < 0) {
         throw std::runtime_error(std::strerror(errno));
     }
 #elif _WIN32
@@ -63,7 +67,7 @@ uint16_t NamedPipeReader::ReadPort() {
 
     DWORD len = sizeof(uint16_t);
 
-    if ((result = ReadFile(hPipe, &out, len, &dwRead, nullptr)) != FALSE) {
+    if ((result = ReadFile(listenPipe, &out, len, &dwRead, nullptr)) != FALSE) {
         if ((dwRead != len) || !result) {
             throw std::runtime_error("Pipe is closed!");
         }
@@ -74,10 +78,10 @@ uint16_t NamedPipeReader::ReadPort() {
 }
 
 void NamedPipeReader::ReadString(uint16_t length, std::u16string& out) {
-    char16_t buffer[64]; // TODO: Fix size?
+    char16_t buffer[64];  // TODO: Fix size?
 
 #ifdef __linux__
-    if ((result = read(hPipe, &buffer, sizeof(char16_t) * length)) < 0) {
+    if ((result = read(listenPipe, &buffer, sizeof(char16_t) * length)) < 0) {
         throw std::runtime_error(std::strerror(errno));
     }
 #elif _WIN32
@@ -85,7 +89,8 @@ void NamedPipeReader::ReadString(uint16_t length, std::u16string& out) {
 
     DWORD len = sizeof(char16_t) * length;
 
-    if ((result = ReadFile(hPipe, &buffer, len, &dwRead, nullptr)) != FALSE) {
+    if ((result = ReadFile(listenPipe, &buffer, len, &dwRead, nullptr)) !=
+        FALSE) {
         if ((dwRead != len) || !result) {
             throw std::runtime_error("Pipe is closed!");
         }

@@ -227,7 +227,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   teamId: 0
   clientId: 0
-  isMultiplayerServer: 0
   defaultHealth: 1
   maximumHealth: 1
   currentHealth: 1
@@ -286,8 +285,6 @@ MonoBehaviour:
   projectileSpread: 1
   fireEffect: {fileID: 1596004525791537826, guid: 1508a59d76cc53347892b7d2db0590a3, type: 3}
   fireRocketEffect: {fileID: 1596004525791537826, guid: 1508a59d76cc53347892b7d2db0590a3, type: 3}
-  isMultiplayerServer: 0
-  isMultiplayerClient: 0
 --- !u!222 &3644999787586099389
 CanvasRenderer:
   m_ObjectHideFlags: 0

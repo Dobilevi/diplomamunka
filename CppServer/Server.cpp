@@ -25,7 +25,7 @@ Server::Server() {
 #ifdef _WIN32
     assert(result == NO_ERROR);
 #endif
-    struct sockaddr_in sockAddr{};
+    struct sockaddr_in sockAddr {};
 
     uint16_t port = namedPipeReader.ReadPort();
     std::cout << "Listening on port: " << port << std::endl;
@@ -68,9 +68,7 @@ Server::Server() {
 
 Server::~Server() {
     namedPipeWriterMutex.lock();
-    {
-        namedPipeWriter.Write(htons(EXIT));
-    }
+    { namedPipeWriter.Write(htons(EXIT)); }
     namedPipeWriterMutex.unlock();
 
 #ifdef __linux__
@@ -147,18 +145,22 @@ void Server::CheckTimeOut() {
                 Player player = connectQueue.front();
                 connectQueue.pop();
 
-                if (!udpWriter.AddClient(player.ip, player.port, ntohll(spawnMessage.clientId))) {
+                if (!udpWriter.AddClient(player.ip, player.port,
+                                         ntohll(spawnMessage.clientId))) {
                     break;
                 }
-                udpReader.AddClient(player.ip, player.port, ntohll(spawnMessage.clientId));
+                udpReader.AddClient(player.ip, player.port,
+                                    ntohll(spawnMessage.clientId));
 
                 lastReceivedMessageMapMutex.lock();
                 {
-                    lastReceivedMessageMap[ntohll(spawnMessage.clientId)] = GetTimestamp();
+                    lastReceivedMessageMap[ntohll(spawnMessage.clientId)] =
+                        GetTimestamp();
                 }
                 lastReceivedMessageMapMutex.unlock();
 
-                udpWriter.MulticastSpawnPlayerMessage(messageType, spawnMessage, length, playerName);
+                udpWriter.MulticastSpawnPlayerMessage(messageType, spawnMessage,
+                                                      length, playerName);
                 break;
             }
             case MessageType::DISCONNECT: {
@@ -198,7 +200,8 @@ void Server::CheckTimeOut() {
                 namedPipeReader.Read(length);
                 namedPipeReader.ReadString(ntohs(length), playerName);
 
-                udpWriter.SendSpawnPlayerUdpMessage(ntohll(clientId), messageType, spawnMessage, playerName);
+                udpWriter.SendSpawnPlayerUdpMessage(
+                    ntohll(clientId), messageType, spawnMessage, playerName);
 
                 break;
             }
@@ -207,7 +210,8 @@ void Server::CheckTimeOut() {
                 namedPipeReader.Read(clientId);
                 namedPipeReader.Read(spawnMessage);
 
-                udpWriter.SendUdpMessage(ntohll(clientId), messageType, spawnMessage);
+                udpWriter.SendUdpMessage(ntohll(clientId), messageType,
+                                         spawnMessage);
 
                 break;
             }
@@ -215,7 +219,8 @@ void Server::CheckTimeOut() {
                 namedPipeReader.Read(clientId);
                 namedPipeReader.Read(spawnProjectileMessage);
 
-                udpWriter.SendUdpMessage(ntohll(clientId), messageType, spawnProjectileMessage);
+                udpWriter.SendUdpMessage(ntohll(clientId), messageType,
+                                         spawnProjectileMessage);
 
                 break;
             }
@@ -252,7 +257,9 @@ void Server::CheckTimeOut() {
             case CONNECT: {
                 connectQueueMutex.lock();
                 {
-                    connectQueue.emplace(udpReader.GetIPAddress(), udpReader.GetPortNumber(), udpReader.GetClientIdHost(), udpReader.GetPlayerName());
+                    connectQueue.emplace(
+                        udpReader.GetIPAddress(), udpReader.GetPortNumber(),
+                        udpReader.GetClientIdHost(), udpReader.GetPlayerName());
                 }
                 connectQueueMutex.unlock();
 
@@ -285,7 +292,9 @@ void Server::CheckTimeOut() {
 
                 lastReceivedMessageMapMutex.lock();
                 {
-                    lastReceivedMessageMap[ntohll(udpReader.GetUpdateMessage().clientId)] = GetTimestamp();
+                    lastReceivedMessageMap[ntohll(
+                        udpReader.GetUpdateMessage().clientId)] =
+                        GetTimestamp();
                 }
                 lastReceivedMessageMapMutex.unlock();
 
@@ -316,7 +325,8 @@ void Server::CheckTimeOut() {
                 {
                     namedPipeWriter.Write(udpReader.GetMessageType());
                     namedPipeWriter.Write(udpReader.GetErrorType());
-                    namedPipeWriter.Write(htonll(udpReader.GetSenderClientId()));
+                    namedPipeWriter.Write(
+                        htonll(udpReader.GetSenderClientId()));
                     namedPipeWriter.Write(udpReader.GetClientId());
                 }
                 namedPipeWriterMutex.unlock();
