@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Unity.Netcode;
 using UnityEngine;
@@ -202,9 +203,9 @@ public class ShootingControllerNet : NetworkBehaviour
 
     public override void OnDestroy()
     {
-        if (IsOwner)
+        if (IsOwner && tag.Equals("Player"))
         {
-            StreamWriter fs = new StreamWriter($"response_times_netcode_{name}_{Time.realtimeSinceStartup}.txt");
+            StreamWriter fs = new StreamWriter($"response_times_netcode_{name}_{DateTime.Now.ToString("yyyyMMddHHmmss")}_{Time.realtimeSinceStartup}.txt");
             fs.WriteLine(responseTimes.Count);
             foreach (var responseTime in responseTimes)
             {

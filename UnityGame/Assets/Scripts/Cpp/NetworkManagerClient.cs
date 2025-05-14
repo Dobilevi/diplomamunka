@@ -583,7 +583,7 @@ public class NetworkManagerClient : MonoBehaviour
 
         updateTimer.Dispose();
 
-        StreamWriter fs = new StreamWriter($"response_times_{Time.realtimeSinceStartup}.txt");
+        StreamWriter fs = new StreamWriter($"response_times_{DateTime.Now.ToString("yyyyMMddHHmmss")}_{Time.realtimeSinceStartup}.txt");
         foreach (var responseTime in responseTimes)
         {
             fs.WriteLine(responseTime);
