@@ -3,12 +3,12 @@
 #define NAMEDPIPEWRITER_H
 
 #ifdef __linux__
-#include <unistd.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #elif _WIN32
-#include <ws2tcpip.h>
 #include <windows.h>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #endif
 
 #include <iostream>
@@ -18,10 +18,10 @@
 
 class NamedPipeWriter {
 #ifdef __linux__
-    int hPipe;
+    int writePipe;
     ssize_t result = 0;
 #elif _WIN32
-    HANDLE hPipe;
+    HANDLE writePipe;
     int result = 0;
     DWORD dwWritten = 0;
 #endif
@@ -31,11 +31,11 @@ class NamedPipeWriter {
     virtual ~NamedPipeWriter();
 
     template <typename T>
-    void Write(const T &message) {
+    void Write(const T& message) {
 #ifdef __linux__
-        result = write(hPipe, &message, sizeof(T));
+        result = write(writePipe, &message, sizeof(T));
 #elif _WIN32
-        result = WriteFile(hPipe, &message, sizeof(T), &dwWritten, nullptr);
+        result = WriteFile(writePipe, &message, sizeof(T), &dwWritten, nullptr);
 #endif
     }
 
@@ -43,13 +43,17 @@ class NamedPipeWriter {
         uint16_t lengthNetwork = htons((uint16_t)message.length());
 
 #ifdef __linux__
-        result = write(hPipe, &lengthNetwork, sizeof(uint16_t));
+        result = write(writePipe, &lengthNetwork, sizeof(uint16_t));
 
-        result = write(hPipe, message.c_str(), message.length() * sizeof(char16_t));
+        result = write(writePipe, message.c_str(),
+                       message.length() * sizeof(char16_t));
 #elif _WIN32
-        result = WriteFile(hPipe, &lengthNetwork, sizeof(uint16_t), &dwWritten, nullptr);
+        result = WriteFile(writePipe, &lengthNetwork, sizeof(uint16_t),
+                           &dwWritten, nullptr);
 
-        result = WriteFile(hPipe, message.c_str(), message.length() * sizeof(char16_t), &dwWritten, nullptr);
+        result =
+            WriteFile(writePipe, message.c_str(),
+                      message.length() * sizeof(char16_t), &dwWritten, nullptr);
 #endif
     }
 };

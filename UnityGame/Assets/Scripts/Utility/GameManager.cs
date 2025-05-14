@@ -291,7 +291,7 @@ public class GameManager : MonoBehaviour
                 Debug.Log("There are " + numberOfInfiniteSpawners + " infinite spawners " + " so the level will always be winnable, "
                     + "\nhowever you sshould still playtest for timely completion");
             }
-            else if (enemiesToDefeat > numberOfEnemiesFoundAtStart)
+            else if (!SceneManager.GetActiveScene().name.Contains("Multiplayer") && (enemiesToDefeat > numberOfEnemiesFoundAtStart))
             {
                 Debug.LogWarning("There are " + enemiesToDefeat + " enemies to defeat but only " + numberOfEnemiesFoundAtStart + 
                     " enemies found at start \nThe level can not be completed!");

@@ -58,8 +58,7 @@ public class NetworkManagerUI : MonoBehaviour
     {
         for (int i = 0; i < GameManager.instance.botCount; i++)
         {
-            // NetworkManager.Singleton.SpawnManager.InstantiateAndSpawn(botPrefab, NetworkManager.ServerClientId, true, false, false, new Vector2(Random.Range(-10.0f, 10.0f), Random.Range(-10.0f, 10.0f)));
-            NetworkManager.Singleton.SpawnManager.InstantiateAndSpawn(botPrefab, NetworkManager.ServerClientId, true, false, true);
+            NetworkManager.Singleton.SpawnManager.InstantiateAndSpawn(botPrefab, NetworkManager.ServerClientId, true, false, true, new Vector2(Random.Range(-10.0f, 10.0f), Random.Range(-10.0f, 10.0f)));
         }
     }
 

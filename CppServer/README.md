@@ -1,5 +1,5 @@
 
-# C++ szerver
+# C++ Server
 
 ## Build
 
@@ -8,6 +8,7 @@
 ```bash
 cmake -Bbuild -H.
 make -j4 -C build
+chmod 777 build/CppServer
 ```
 
 ### Windows
@@ -22,7 +23,8 @@ cmake --build .
 ## clang-format
 
 ```bash
-clang-format
+clang-format -i ./*.h ./*.cpp
+clang-format -i ./Assets/*.h ./Assets/*.cpp
+clang-format -i ./NamedPipes/*.h ./NamedPipes/*.cpp
+clang-format -i ./UDP/*.h ./UDP/*.cpp
 ```
-
-<!-- TODO -->

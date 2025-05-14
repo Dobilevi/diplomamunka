@@ -6,16 +6,14 @@
 #include <map>
 #include <vector>
 
+#include "Assets/Player.h"
 #include "NamedPipes/NamedPipeReader.h"
 #include "NamedPipes/NamedPipeWriter.h"
-
 #include "UDP/UDPReader.h"
 #include "UDP/UDPWriter.h"
 
-#include "Assets/Player.h"
-
 class Server {
-private:
+   private:
 #ifdef __linux__
     int serverSocket = 0;
     int result;
@@ -24,7 +22,7 @@ private:
     WSAData wsaData{};
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
-    const std::time_t timeOutLimit = 5; // seconds
+    const std::time_t timeOutLimit = 5;  // seconds
 
     std::mutex lastReceivedMessageMapMutex{};
     std::map<uint64_t, time_t> lastReceivedMessageMap;
@@ -55,7 +53,7 @@ private:
     void CheckTimeOut();
     [[noreturn]] void CheckTimeOutLoop();
 
-public:
+   public:
     Server();
     ~Server();
 };

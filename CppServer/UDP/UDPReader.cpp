@@ -6,16 +6,13 @@
 #include "NetworkHostConversion.h"
 
 #ifdef __linux__
-void UDPReader::SetSocket(int newSocket) {
-    listenSocket = newSocket;
-}
+void UDPReader::SetSocket(int newSocket) { listenSocket = newSocket; }
 #elif _WIN32
-void UDPReader::SetSocket(SOCKET newSocket) {
-    listenSocket = newSocket;
-}
+void UDPReader::SetSocket(SOCKET newSocket) { listenSocket = newSocket; }
 #endif
 
-void UDPReader::AddClient(const std::string& ip, const std::string& port, uint64_t clientId) {
+void UDPReader::AddClient(const std::string& ip, const std::string& port,
+                          uint64_t clientId) {
     clientMutex.lock();
 
     connectionMap[ip][port] = clientId;
@@ -29,14 +26,17 @@ void UDPReader::AddClient(const std::string& ip, const std::string& port, uint64
 void UDPReader::RemoveClient(uint64_t clientId) {
     clientMutex.lock();
 
-    connectionMap.at(clientAddressMap.at(clientId).first).erase(clientAddressMap.at(clientId).second);
-    packageIdMap.at(clientAddressMap.at(clientId).first).erase(clientAddressMap.at(clientId).second);
+    connectionMap.at(clientAddressMap.at(clientId).first)
+        .erase(clientAddressMap.at(clientId).second);
+    packageIdMap.at(clientAddressMap.at(clientId).first)
+        .erase(clientAddressMap.at(clientId).second);
     clientAddressMap.erase(clientId);
 
     clientMutex.unlock();
 }
 
-bool UDPReader::IsConnected(const std::string& ip, const std::string& port, uint64_t clientId) {
+bool UDPReader::IsConnected(const std::string& ip, const std::string& port,
+                            uint64_t clientId) {
     clientMutex.lock();
 
     bool isConnected = false;
@@ -56,7 +56,8 @@ bool UDPReader::IsConnected(const std::string& ip, const std::string& port) {
 
     bool isConnected = false;
     if (connectionMap.find(ip) != connectionMap.end()) {
-        isConnected = connectionMap.at(ip).find(port) != connectionMap.at(ip).end();
+        isConnected =
+            connectionMap.at(ip).find(port) != connectionMap.at(ip).end();
     }
 
     clientMutex.unlock();
@@ -73,12 +74,13 @@ void UDPReader::ReadUdpPackage() {
     }
 
     if (FD_ISSET(listenSocket, &readfds)) {
-        const uint16_t size = 256; // TODO: size?
+        const uint16_t size = 256;  // TODO: size?
         UDP udp;
-        udp = { size, new char[size] };
+        udp = {size, new char[size]};
 
         socklen_t fromlen = sizeof(address);
-        int rec = recvfrom(listenSocket, udp.buffer, size, 0, &address, &fromlen);
+        int rec =
+            recvfrom(listenSocket, udp.buffer, size, 0, &address, &fromlen);
         if (rec == -1) {
             delete[] udp.buffer;
             return;
@@ -90,9 +92,7 @@ void UDPReader::ReadUdpPackage() {
         udp.port = std::to_string(ntohs(sin->sin_port));
 
         udpQueueMutex.lock();
-        {
-            udpQueue.push(udp);
-        }
+        { udpQueue.push(udp); }
         udpQueueMutex.unlock();
     }
 }
@@ -151,7 +151,8 @@ void UDPReader::ProcessMessage() {
         case CONNECT: {
             buffer.Read(lengthNetwork);
             lengthHost = ntohs(lengthNetwork);
-            buffer.ReadString(playerNameNetwork, lengthHost, maxPlayerNameLength);
+            buffer.ReadString(playerNameNetwork, lengthHost,
+                              maxPlayerNameLength);
             if (IsConnected(ip, port)) {
                 messageTypeHost = NONE;
                 return;
@@ -222,41 +223,25 @@ void UDPReader::ProcessMessage() {
     }
 }
 
-const std::string& UDPReader::GetIPAddress() const {
-    return ip;
-}
+const std::string& UDPReader::GetIPAddress() const { return ip; }
 
-const std::string& UDPReader::GetPortNumber() const {
-    return port;
-}
+const std::string& UDPReader::GetPortNumber() const { return port; }
 
 uint64_t UDPReader::GetSenderClientId() const {
     return connectionMap.at(ip).at(port);
 }
 
-uint64_t UDPReader::GetPackageId() const {
-    return packageIdNetwork;
-}
+uint64_t UDPReader::GetPackageId() const { return packageIdNetwork; }
 
-uint16_t UDPReader::GetMessageType() const {
-    return messageTypeNetwork;
-}
+uint16_t UDPReader::GetMessageType() const { return messageTypeNetwork; }
 
-MessageType UDPReader::GetMessageTypeHost() const {
-    return messageTypeHost;
-}
+MessageType UDPReader::GetMessageTypeHost() const { return messageTypeHost; }
 
-uint16_t UDPReader::GetErrorType() const {
-    return errorTypeNetwork;
-}
+uint16_t UDPReader::GetErrorType() const { return errorTypeNetwork; }
 
-uint64_t UDPReader::GetClientId() const {
-    return m_clientIdNetwork;
-}
+uint64_t UDPReader::GetClientId() const { return m_clientIdNetwork; }
 
-uint64_t UDPReader::GetClientIdHost() const {
-    return m_clientIdHost;
-}
+uint64_t UDPReader::GetClientIdHost() const { return m_clientIdHost; }
 
 const std::u16string& UDPReader::GetPlayerName() const {
     return playerNameNetwork;

@@ -4,8 +4,6 @@
 
 #include "MessageType.h"
 
-//#include <codecvt> // TODO: remove?
-
 #ifdef __linux__
 #include <arpa/inet.h>
 #elif _WIN32
@@ -18,8 +16,8 @@ typedef int socklen_t;
 #include <queue>
 #include <vector>
 
-#include "Player.h"
 #include "Buffer.h"
+#include "Player.h"
 
 class UDPReader {
 #ifdef __linux__
@@ -30,7 +28,7 @@ class UDPReader {
     fd_set readfds{};
 
     sockaddr address{};
-    Buffer buffer = Buffer(256); // TODO: size?
+    Buffer buffer = Buffer(256);  // TODO: size?
 
     std::string ip;
     std::string port;
@@ -68,18 +66,20 @@ class UDPReader {
 
     static const uint16_t maxPlayerNameLength = 32;
 
-public:
+   public:
 #ifdef __linux__
     void SetSocket(int newSocket);
 #elif _WIN32
     void SetSocket(SOCKET newSocket);
 #endif
 
-    void AddClient(const std::string& ip, const std::string& port, uint64_t clientId);
+    void AddClient(const std::string& ip, const std::string& port,
+                   uint64_t clientId);
     void RemoveClient(uint64_t clientId);
 
     bool IsConnected(const std::string& ip, const std::string& port);
-    bool IsConnected(const std::string& ip, const std::string& port, uint64_t clientId);
+    bool IsConnected(const std::string& ip, const std::string& port,
+                     uint64_t clientId);
 
     void CheckPackageId();
 
