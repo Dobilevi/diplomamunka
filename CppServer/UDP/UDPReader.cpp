@@ -1,6 +1,7 @@
 
 #include "UDPReader.h"
 
+#include <array>
 #include <iostream>
 
 #include "NetworkHostConversion.h"
@@ -74,20 +75,17 @@ void UDPReader::ReadUDPPackage() {
     }
 
     if (FD_ISSET(listenSocket, &readfds)) {
-        const uint16_t size = 256;  // TODO: size?
-        UDP udp;
-        udp = {size, new char[size]};
+        UDP udp{};
 
         socklen_t fromlen = sizeof(address);
         int rec =
-            recvfrom(listenSocket, udp.buffer, size, 0, &address, &fromlen);
+            recvfrom(listenSocket, udp.buffer.get(), udp.size, 0, &address, &fromlen);
         if (rec == -1) {
-            delete[] udp.buffer;
             return;
         }
         udp.size = rec;
 
-        auto* sin = (struct sockaddr_in*)&address;
+        auto* sin = reinterpret_cast<struct sockaddr_in*>(&address);
         udp.ip = inet_ntoa(sin->sin_addr);
         udp.port = std::to_string(ntohs(sin->sin_port));
 
@@ -143,7 +141,7 @@ void UDPReader::ProcessMessage() {
     packageIdHost = ntohll(packageIdNetwork);
 
     buffer.Read(messageTypeNetwork);
-    messageTypeHost = (MessageType)ntohs(messageTypeNetwork);
+    messageTypeHost = static_cast<MessageType>(ntohs(messageTypeNetwork));
 
     CheckPackageId();
 

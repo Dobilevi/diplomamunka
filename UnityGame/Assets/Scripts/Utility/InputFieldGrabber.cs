@@ -7,8 +7,8 @@ using TMPro;
 
 public class InputFieldGrabber : MonoBehaviour
 {
-    [SerializeField]public string pref;
-    [SerializeField]private string inputText;
+    public string pref;
+    private string inputText;
 
     public void SetInputField(string value)
     {

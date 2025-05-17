@@ -16,7 +16,7 @@ public class RocketPickup : MonoBehaviour
             if (controller.isPlayerControlled)
             {
                 controller.rocketCount++;
-                Destroy(this.gameObject);
+                Destroy(gameObject);
                 if (pickUpEvent != null)
                 {
                     Instantiate(pickUpEvent);

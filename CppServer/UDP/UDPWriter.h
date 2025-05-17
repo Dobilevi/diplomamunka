@@ -19,7 +19,7 @@
 #include "NetworkHostConversion.h"
 
 class UDPWriter {
-    Buffer buffer = Buffer(256);  // TODO: size?
+    Buffer buffer{};
 
     fd_set writefds;
 #ifdef __linux__
@@ -32,6 +32,8 @@ class UDPWriter {
     std::unordered_map<uint64_t, uint64_t> packageIdMap{};
 
    public:
+    UDPWriter();
+
 #ifdef __linux__
     void SetSocket(int newSocket);
 #elif _WIN32
@@ -75,7 +77,7 @@ class UDPWriter {
         buffer.Write(htonll(++packageIdMap[clientId]));
         buffer.Write(messageType);
         buffer.Write(message);
-        buffer.Write(htons((uint16_t)playerName.length()));
+        buffer.Write(htons(static_cast<uint16_t>(playerName.length())));
         buffer.WriteString(playerName);
 
         SendUDPPackage(addrinfoMap[clientId]);

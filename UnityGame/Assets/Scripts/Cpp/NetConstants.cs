@@ -8,5 +8,6 @@
         public static int defaultServerPort = 7777;
         public static int clientPort = 5000;
         public static int maxClientPort = 5500;
+        public static int maxPlayerNameLength = 32;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Cpp;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -89,8 +90,9 @@ public class ControllerNet : NetworkBehaviour
     void SetPlayerNameServerRpc(string value)
     {
         Debug.Log("SetPlayerNameServerRpc " + value);
-        
-        value = String.Join("", value.Substring(0, Math.Min(32, value.Length)).Split(' '));
+
+        value = String.Join("", value.Split(' '));
+        value = value.Substring(0, Math.Min(value.Length, NetConstants.maxPlayerNameLength));
 
         value = GameObject.FindGameObjectWithTag("NetworkManager").GetComponent<NetworkManagerUI>().CheckName(value).ToString();
 

@@ -8,25 +8,14 @@ using System.Linq;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// A class which manages pages of UI elements
-/// and the game's UI
-/// </summary>
 public class UIManager : MonoBehaviour
 {
 
-    [Header("Page Management")]
-    [Tooltip("The pages (Panels) managed by the UI Manager")]
     public List<UIPage> pages;
-    [Tooltip("The index of the active page in the UI")]
     public int currentPage = 0;
-    [Tooltip("The page (by index) switched to when the UI Manager starts up")]
     public int defaultPage = 0;
 
-    [Header("Pause Settings")]
-    [Tooltip("The index of the pause page in the pages list")]
     public int pausePageIndex = 1;
-    [Tooltip("Whether or not to allow pausing")]
     public bool allowPause = true;
 
     // Whether or not the application is paused
@@ -44,29 +33,11 @@ public class UIManager : MonoBehaviour
 
     public GameObject multiplayerMenu;
 
-    /// <summary>
-    /// Description:
-    /// Standard Unity function called whenever the attached game object is enabled
-    /// 
-    /// When this component wakes up (including switching scenes) it sets itself as the GameManager's UI manager
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     private void OnEnable()
     {
         SetupGameManagerUIManager();
     }
 
-    /// <summary>
-    /// Description:
-    /// Sets this component as the UI manager for the GameManager
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     private void SetupGameManagerUIManager()
     {
         if (GameManager.instance != null && GameManager.instance.uiManager == null)
@@ -75,28 +46,11 @@ public class UIManager : MonoBehaviour
         }     
     }
 
-    /// <summary>
-    /// Description:
-    /// Finds and stores all UIElements in the UIElements list
-    /// Input:
-    /// None
-    /// Return:
-    /// void (no return)
-    /// </summary>
     private void SetUpUIElements()
     {
         UIelements = FindObjectsOfType<UIelement>().ToList();
     }
 
-    /// <summary>
-    /// Description:
-    /// Gets the event system from the scene if one exists
-    /// If one does not exist a warning will be displayed
-    /// Input:
-    /// None
-    /// Return:
-    /// void (no return)
-    /// </summary>
     private void SetUpEventSystem()
     {
         eventSystem = FindObjectOfType<EventSystem>();
@@ -108,14 +62,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Attempts to set up an input manager with this UI manager so it can get pause input
-    /// Input:
-    /// None
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     private void SetUpInputManager()
     {
         if (inputManager == null)
@@ -128,23 +74,11 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// </summary>
     public void ToggleMenu()
     {
         multiplayerMenu.SetActive(!multiplayerMenu.activeSelf);
     }
 
-    /// <summary>
-    /// Description:
-    /// If the game is paused, unpauses the game.
-    /// If the game is not paused, pauses the game.
-    /// Inputs:
-    /// None
-    /// Retuns:
-    /// void (no return)
-    /// </summary>
     public void TogglePause()
     {
         if (allowPause)
@@ -167,14 +101,6 @@ public class UIManager : MonoBehaviour
         }      
     }
 
-    /// <summary>
-    /// Description:
-    /// Goes through all UI elements and calls their UpdateUI function
-    /// Input:
-    /// None
-    /// Return:
-    /// void (no return)
-    /// </summary>
     public void UpdateUI()
     {
         SetUpUIElements();
@@ -184,14 +110,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Default Unity function that runs once when the script is first started and before Update
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     private void Start()
     {
         SetUpInputManager();
@@ -200,27 +118,11 @@ public class UIManager : MonoBehaviour
         UpdateUI();
     }
 
-    /// <summary>
-    /// Description:
-    /// Default function from Unity that runs every frame
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     private void Update()
     {
         CheckPauseInput();
     }
 
-    /// <summary>
-    /// Description:
-    /// If the input manager is set up, reads the pause input
-    /// Inputs:
-    /// none
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     private void CheckPauseInput()
     {
         if (inputManager != null)
@@ -231,15 +133,6 @@ public class UIManager : MonoBehaviour
             }
         }
     }
-    /// <summary>
-    /// Description:
-    /// Goes to a page by that page's index
-    /// Inputs: 
-    /// int page
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
-    /// <param name="pageIndex">The index in the page list to go to</param>
     public void GoToPage(int pageIndex)
     {
         if (pageIndex < pages.Count && pages[pageIndex] != null)
@@ -250,15 +143,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Goes to a page by that page's name
-    /// Inputs: 
-    /// string pageName
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
-    /// <param name="pageName">The name of the page in the game you want to go to, if their are duplicates this picks the first found</param>
     public void GoToPageByName(string pageName)
     {
         UIPage page = pages.Find(item => item.name == pageName);
@@ -266,15 +150,6 @@ public class UIManager : MonoBehaviour
         GoToPage(pageIndex);
     }
 
-    /// <summary>
-    /// Description:
-    /// Turns all stored pages on or off depending on parameters
-    /// Input: 
-    /// bool enable
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
-    /// <param name="activated">The true or false value to set all page game object's activeness to</param>
     public void SetActiveAllPages(bool activated)
     {
         if (pages != null)

@@ -4,48 +4,24 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// A class which controls enemy behaviour
-/// </summary>
 public class Enemy : MonoBehaviour
 {
-    [Header("Settings")]
-    [Tooltip("The speed at which the enemy moves.")]
     public float moveSpeed = 5.0f;
-    [Tooltip("The score value for defeating this enemy")]
     public int scoreValue = 5;
 
-    [Header("Following Settings")]
-    [Tooltip("The transform of the object that this enemy should follow.")]
     public Transform followTarget = null;
-    [Tooltip("The distance at which the enemy begins following the follow target.")]
     public float followRange = 10.0f;
 
-    [Header("Shooting")]
-    [Tooltip("The enemy's gun components")]
     public List<ShootingController> guns = new List<ShootingController>();
 
     private bool isDead = false;
 
-    /// <summary>
-    /// Enum to help with shooting modes
-    /// </summary>
     public enum ShootMode { None, ShootAll };
 
-    [Tooltip("The way the enemy shoots:\n" +
-        "None: Enemy does not shoot.\n" +
-        "ShootAll: Enemy fires all guns whenever it can.")]
     public ShootMode shootMode = ShootMode.ShootAll;
 
-    /// <summary>
-    /// Enum to help wih different movement modes
-    /// </summary>
     public enum MovementModes { NoMovement, FollowTarget, Scroll };
 
-    [Tooltip("The way this enemy will move\n" +
-        "NoMovement: This enemy will not move.\n" +
-        "FollowTarget: This enemy will follow the assigned target.\n" +
-        "Scroll: This enemy will move in one horizontal direction only.")]
     public MovementModes movementMode = MovementModes.FollowTarget;
 
     //The direction that this enemy will try to scroll if it is set as a scrolling enemy.
@@ -56,27 +32,11 @@ public class Enemy : MonoBehaviour
     private NetworkManagerServer networkManagerServer = null;
     private NetworkManagerClient networkManagerClient = null;
 
-    /// <summary>
-    /// Description:
-    /// Standard Unity function called after update every frame
-    /// Inputs: 
-    /// none
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     private void LateUpdate()
     {
         HandleBehaviour();       
     }
 
-    /// <summary>
-    /// Description:
-    /// Standard Unity function called once before the first call to Update
-    /// Input:
-    /// none
-    /// Return:
-    /// void (no return)
-    /// </summary>
     private void Start()
     {
         isMultiplayerServer = SceneManager.GetActiveScene().name.Equals("LevelMultiplayerServer");
@@ -100,14 +60,6 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Handles moving and shooting in accordance with the enemy's set behaviour
-    /// Inputs:
-    /// none
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     private void HandleBehaviour()
     {
         // Check if the target is in range, then move
@@ -129,16 +81,6 @@ public class Enemy : MonoBehaviour
         TryToShoot();
     }
 
-    /// <summary>
-    /// Description:
-    /// This is meant to be called before destroying the gameobject associated with this script
-    /// It can not be replaced with OnDestroy() because of Unity's inability to distiguish between unloading a scene
-    /// and destroying the gameobject from the Destroy function
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     public void DoBeforeDestroy()
     {
         if (!isDead)
@@ -149,14 +91,6 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Adds to the game manager's score the score associated with this enemy if one exists
-    /// Input:
-    /// None
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     private void AddToScore()
     {
         if ((GameManager.instance != null) && !GameManager.instance.gameIsOver)
@@ -165,14 +99,6 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Increments the game manager's number of defeated enemies
-    /// Input:
-    /// none
-    /// Return:
-    /// void (no return)
-    /// </summary>
     private void IncrementEnemiesDefeated()
     {
         if (GameManager.instance != null && !GameManager.instance.gameIsOver)
@@ -181,13 +107,6 @@ public class Enemy : MonoBehaviour
         }       
     }
 
-    /// <summary>
-    /// Description:
-    /// Moves the enemy and rotates it according to it's movement mode
-    /// Inputs: none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     private void MoveEnemy()
     {
         // Determine correct movement
@@ -201,15 +120,6 @@ public class Enemy : MonoBehaviour
         transform.rotation = rotationToTarget;
     }
 
-    /// <summary>
-    /// Description:
-    /// Calculates the movement of this enemy
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// Vector3
-    /// </summary>
-    /// <returns>Vector3: The movement of this enemy</returns>
     protected virtual Vector3 GetDesiredMovement()
     {
         Vector3 movement;
@@ -228,15 +138,6 @@ public class Enemy : MonoBehaviour
         return movement;
     }
 
-    /// <summary>
-    /// Description:
-    /// Calculates and returns the desired rotation of this enemy
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// Quaternion
-    /// </summary>
-    /// <returns>Quaternion: The desired rotation</returns>
     protected virtual Quaternion GetDesiredRotation()
     {
         Quaternion rotation;
@@ -255,15 +156,6 @@ public class Enemy : MonoBehaviour
         return rotation;
     }
 
-    /// <summary>
-    /// Description:
-    /// Tries to fire all referenced ShootingController scripts
-    /// depends on shootMode variable
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     private void TryToShoot()
     {
         switch (shootMode)
@@ -279,15 +171,6 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// The direction and magnitude of the enemy's desired movement in follow mode
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// Vector3
-    /// </summary>
-    /// <returns>Vector3: The movement to be used in follow movement mode.</returns>
     private Vector3 GetFollowPlayerMovement()
     {
         Vector3 moveDirection = (followTarget.position - transform.position).normalized;
@@ -295,15 +178,6 @@ public class Enemy : MonoBehaviour
         return movement;
     }
 
-    /// <summary>
-    /// Description
-    /// The desired rotation of follow movement mode
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// Quaternion
-    /// </summary>
-    /// <returns>Quaternion: The rotation to be used in follow movement mode.</returns>
     private Quaternion GetFollowPlayerRotation()
     {
         float angle = Vector3.SignedAngle(isMultiplayerClient ? Vector3.up : Vector3.down, (followTarget.position - transform.position).normalized, Vector3.forward);
@@ -311,15 +185,6 @@ public class Enemy : MonoBehaviour
         return rotationToTarget;
     }
 
-    /// <summary>
-    /// Description:
-    /// The direction and magnitude of the enemy's desired movement in scrolling mode
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// Vector3
-    /// </summary>
-    /// <returns>Vector3: The movement to be used in scrolling movement mode.</returns>
     private Vector3 GetScrollingMovement()
     {
         scrollDirection = GetScrollDirection();
@@ -327,29 +192,11 @@ public class Enemy : MonoBehaviour
         return movement;
     }
 
-    /// <summary>
-    /// Description
-    /// The desired rotation of scrolling movement mode
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// Quaternion
-    /// </summary>
-    /// <returns>Quaternion: The rotation to be used in scrolling movement mode</returns>
     private Quaternion GetScrollingRotation()
     {
         return Quaternion.identity;
     }
 
-    /// <summary>
-    /// Description:
-    /// Determines the direction to move in with scrolling movement mode
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// Vector3
-    /// </summary>
-    /// <returns>Vector3: The desired scroll direction</returns>
     private Vector3 GetScrollDirection()
     {
         Camera camera = Camera.main;

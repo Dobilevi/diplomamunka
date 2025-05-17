@@ -30,13 +30,12 @@ NamedPipeReader::NamedPipeReader() {
     listenPipe =
         CreateNamedPipe(TEXT("\\\\.\\pipe\\CsharpPipe"), PIPE_ACCESS_DUPLEX,
                         PIPE_TYPE_BYTE | PIPE_READMODE_BYTE |
-                            PIPE_WAIT,  // FILE_FLAG_FIRST_PIPE_INSTANCE is not
-                                        // needed but forces CreateNamedPipe(..)
-                                        // to fail if the pipe already exists...
+                            PIPE_WAIT,
                         1,
-                        1024 * 16,  // TODO
-                        1024 * 16,  // TODO
-                        NMPWAIT_USE_DEFAULT_WAIT, nullptr);
+                        UINT16_MAX,
+                        UINT16_MAX,
+                        NMPWAIT_USE_DEFAULT_WAIT,
+                        nullptr);
 
     while (listenPipe != INVALID_HANDLE_VALUE) {
         if (ConnectNamedPipe(listenPipe, nullptr) !=

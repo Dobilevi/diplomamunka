@@ -2,18 +2,13 @@
 
 #include <stdexcept>
 
-Buffer::Buffer(uint16_t size) : size(size), buffer(new char[size]) {}
-
-Buffer::~Buffer() { delete[] buffer; }
-
-void Buffer::SetBuffer(char* buffer, uint16_t size) {
-    delete[] this->buffer;
+void Buffer::SetBuffer(std::shared_ptr<char[]> buffer, uint16_t size) {
     this->buffer = buffer;
     this->size = size;
     index = 0;
 }
 
-char* Buffer::GetBuffer() const { return buffer; }
+std::shared_ptr<char[]> Buffer::GetBuffer() const { return buffer; }
 
 uint16_t Buffer::GetBufferSize() const { return size; }
 
@@ -30,7 +25,7 @@ void Buffer::CheckSize(uint16_t length) const {
 void Buffer::WriteString(const std::u16string& value) {
     CheckSize(sizeof(char16_t) * value.length());
 
-    std::memcpy(buffer + index, value.c_str(),
+    std::memcpy(buffer.get() + index, value.c_str(),
                 sizeof(char16_t) * value.length());
     index += sizeof(char16_t) * value.length();
 }
@@ -44,7 +39,7 @@ void Buffer::ReadString(std::u16string& out, uint16_t length,
     char16_t* value = new char16_t[length + 1];
     const char16_t nul = 0;
     std::memcpy(value + length, &nul, sizeof(char16_t));
-    std::memcpy(value, buffer + index, sizeof(char16_t) * length);
+    std::memcpy(value, buffer.get() + index, sizeof(char16_t) * length);
     out = value;
     index += sizeof(char16_t) * length;
 

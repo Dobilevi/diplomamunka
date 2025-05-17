@@ -62,10 +62,10 @@ public class NetworkManagerServer : MonoBehaviour
 
     private bool shouldSendUpdate = false;
 
-#if UNITY_STANDALONE_WIN
+#if (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
     private NamedPipeClientStream pipeClient = null;
     private NamedPipeServerStream pipeServer = null;
-#else
+#elif (UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX)
     private FileStream pipeClient = null;
     private FileStream pipeServer = null;
 #endif
@@ -270,7 +270,7 @@ public class NetworkManagerServer : MonoBehaviour
             return;
         }
 
-#if UNITY_STANDALONE_WIN
+#if (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
         pipeServer = new NamedPipeServerStream("CppPipe", PipeDirection.In);
         pipeServer.WaitForConnection();
         pipeClient = new NamedPipeClientStream(".", "CsharpPipe", PipeDirection.Out);

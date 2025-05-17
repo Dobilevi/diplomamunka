@@ -6,25 +6,14 @@ using UnityEngine.InputSystem;
 using Cpp.Messages;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// A class which controls player aiming and shooting
-/// </summary>
 public class ShootingController : MonoBehaviour
 {
-    [Header("GameObject/Component References")]
-    [Tooltip("The projectile to be fired.")]
     public GameObject projectilePrefab = null;
-    [Tooltip("The projectile to be fired.")]
     public GameObject rocketPrefab = null;
-    [Tooltip("The transform in the hierarchy which holds projectiles if any")]
     public Transform projectileHolder = null;
 
-    [Header("Input")]
-    [Tooltip("Whether this shooting controller is controlled by the player")]
     public bool isPlayerControlled = false;
 
-    [Header("Firing Settings")]
-    [Tooltip("The minimum time between projectiles being fired.")]
     public float fireRate = 0.05f;
     public int rocketCount = 3;
 
@@ -34,8 +23,6 @@ public class ShootingController : MonoBehaviour
         set => rocketCount = value;
     }
 
-    [Tooltip("The maximum difference between the direction the" +
-             " shooting controller is facing and the direction projectiles are launched.")]
     public float projectileSpread = 1.0f;
 
     // The last time this component was fired
@@ -46,10 +33,7 @@ public class ShootingController : MonoBehaviour
         set => lastFired = value;
     }
 
-    [Header("Effects")]
-    [Tooltip("The effect to create when this fires")]
     public GameObject fireEffect;
-    [Tooltip("The effect to create when this fires")]
     public GameObject fireRocketEffect;
 
     private bool isMultiplayerServer = false;
@@ -60,27 +44,11 @@ public class ShootingController : MonoBehaviour
     //The input manager which manages player input
     private InputManager inputManager = null;
 
-    /// <summary>
-    /// Description:
-    /// Standard unity function that runs every frame
-    /// Inputs:
-    /// none
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     private void Update()
     {
         ProcessInput();
     }
 
-    /// <summary>
-    /// Description:
-    /// Standard unity function that runs when the script starts
-    /// Inputs:
-    /// none
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     private void Start()
     {
         isMultiplayerServer = SceneManager.GetActiveScene().name.Equals("LevelMultiplayerServer");
@@ -98,14 +66,6 @@ public class ShootingController : MonoBehaviour
         SetupInput();
     }
 
-    /// <summary>
-    /// Description:
-    /// Attempts to set up input if this script is player controlled and input is not already correctly set up 
-    /// Inputs:
-    /// none
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     void SetupInput()
     {
         if (isPlayerControlled)
@@ -122,14 +82,6 @@ public class ShootingController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Reads input from the input manager
-    /// Inputs:
-    /// None
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     void ProcessInput()
     {
         if (isPlayerControlled)
@@ -146,14 +98,6 @@ public class ShootingController : MonoBehaviour
         }   
     }
 
-    /// <summary>
-    /// Description:
-    /// Fires a projectile if possible
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     public void Fire()
     {
         // If the cooldown is over fire a projectile
@@ -172,14 +116,6 @@ public class ShootingController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Fires a projectile if possible
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     public void FireRocket()
     {
         // If the cooldown is over fire a projectile
@@ -202,14 +138,6 @@ public class ShootingController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Spawns a projectile and sets it up
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     public void SpawnProjectile()
     {
         // Check that the prefab is valid
