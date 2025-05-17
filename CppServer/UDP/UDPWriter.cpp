@@ -3,6 +3,10 @@
 
 #include <iostream>
 
+UDPWriter::UDPWriter() {
+    buffer.SetBuffer(std::shared_ptr<char[]>(new char[UINT16_MAX]), UINT16_MAX);
+}
+
 #ifdef __linux__
 void UDPWriter::SetSocket(int newSocket) { writeSocket = newSocket; }
 #elif _WIN32
@@ -46,7 +50,7 @@ void UDPWriter::SendUDPPackage(addrinfo* adddr) {
     }
 
     if (FD_ISSET(writeSocket, &writefds)) {
-        sendto(writeSocket, buffer.GetBuffer(), buffer.GetSize(), 0,
+        sendto(writeSocket, buffer.GetBuffer().get(), buffer.GetSize(), 0,
                adddr->ai_addr, adddr->ai_addrlen);
     }
 }
@@ -55,7 +59,7 @@ void UDPWriter::MulticastUDPPackage() {
     uint64_t packageId;
     for (auto addr_info : addrinfoMap) {
         packageId = htonll(++packageIdMap[addr_info.first]);
-        std::memcpy(buffer.GetBuffer(), &packageId, sizeof(uint64_t));
+        std::memcpy(buffer.GetBuffer().get(), &packageId, sizeof(uint64_t));
 
         SendUDPPackage(addr_info.second);
     }
@@ -76,7 +80,7 @@ void UDPWriter::SendErrorMessage(const std::string& ip, const std::string& port,
 
     buffer.Reset();
 
-    buffer.Write(htonll((uint64_t)0));
+    buffer.Write(htonll(static_cast<uint64_t>(0)));
     buffer.Write(messageType);
 
     SendUDPPackage(servinfo);

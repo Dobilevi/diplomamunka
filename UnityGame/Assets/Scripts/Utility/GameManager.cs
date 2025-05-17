@@ -5,27 +5,20 @@ using UnityEngine.SceneManagement;
 
 using Cpp;
 
-/// <summary>
-/// Class which manages the game
-/// </summary>
 public class GameManager : MonoBehaviour
 {
     public bool isServer = false;
     // The script that manages all others
     public static GameManager instance = null;
 
-    [Tooltip("The UIManager component which manages the current scene's UI")]
     public UIManager uiManager = null;
 
-    [Tooltip("The player gameobject")]
     public GameObject player = null;
 
-    [Header("Scores")]
     // The current player score in the game
-    [Tooltip("The player's score")]
-    [SerializeField] private static int gameManagerScore = 0;
+    private static int gameManagerScore = 0;
 
-    // Static getter/setter for player score (for convenience)
+    // Static getter/setter for player score
     public static int score
     {
         get
@@ -77,16 +70,6 @@ public class GameManager : MonoBehaviour
 
     public string selectedLevel = "0";
 
-    /// <summary>
-    /// Description:
-    /// Standard Unity function called when the script is loaded, called before start
-    /// 
-    /// When this component is first added or activated, setup the global reference
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     private void Awake()
     {
         Application.runInBackground = true; // TODO: Remove
@@ -206,14 +189,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Standard Unity function called once before the first Update
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     private void Start()
     {
         HandleStartUp();
@@ -224,15 +199,6 @@ public class GameManager : MonoBehaviour
 #endif
     }
 
-    /// <summary>
-    /// Description:
-    /// Handles necessary activities on start up such as getting the highscore and score, updating UI elements, 
-    /// and checking the number of enemies
-    /// Inputs:
-    /// none
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     void HandleStartUp()
     {
         if (isServer)
@@ -250,19 +216,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Searches the level for all spawners and static enemies.
-    /// Only produces debug messages / warnings if the game is set to be winnable
-    /// If there are any infinite spawners a debug message will say so,
-    /// If there are more enemies than the number of enemies to defeat to win
-    /// then a debug message will say so
-    /// If there are too few enemies to defeat to win then a debug warning will say so
-    /// Inputs:
-    /// none
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     private void FigureOutHowManyEnemiesExist()
     {
         List<EnemySpawner> enemySpawners = FindObjectsOfType<EnemySpawner>().ToList();
@@ -304,14 +257,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Increments the number of enemies defeated by 1
-    /// Input:
-    /// none
-    /// Return:
-    /// void (no returned value)
-    /// </summary>
     public void IncrementEnemiesDefeated()
     {
         enemiesDefeated++;
@@ -321,29 +266,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Standard Unity function that gets called when the application (or playmode) ends
-    /// Input:
-    /// none
-    /// Return:
-    /// void (no return)
-    /// </summary>
     private void OnApplicationQuit()
     {
         SaveHighScore();
         ResetScore();
     }
 
-    /// <summary>
-    /// Description:
-    /// Adds a number to the player's score stored in the gameManager
-    /// Input: 
-    /// int scoreAmount
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
-    /// <param name="scoreAmount">The amount to add to the score</param>
     public static void AddScore(int scoreAmount)
     {
         score += scoreAmount;
@@ -354,28 +282,12 @@ public class GameManager : MonoBehaviour
         UpdateUIElements();
     }
     
-    /// <summary>
-    /// Description:
-    /// Resets the current player score
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     public static void ResetScore()
     {
         PlayerPrefs.SetInt("score", 0);
         score = 0;
     }
 
-    /// <summary>
-    /// Description:
-    /// Saves the player's highscore
-    /// Input: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     public static void SaveHighScore()
     {
         if (score > instance.highScore)
@@ -445,14 +357,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Resets the high score in player preferences
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     public static void ResetHighScore()
     {
         PlayerPrefs.SetInt("highscore", 0);
@@ -463,14 +367,6 @@ public class GameManager : MonoBehaviour
         UpdateUIElements();
     }
 
-    /// <summary>
-    /// Description:
-    /// Sends out a message to UI elements to update
-    /// Input: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     public static void UpdateUIElements()
     {
         if (instance != null && instance.uiManager != null)
@@ -479,14 +375,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Description:
-    /// Ends the level, meant to be called when the level is complete (enough enemies have been defeated)
-    /// Inputs: 
-    /// none
-    /// Returns: 
-    /// void (no return)
-    /// </summary>
     public void LevelCleared()
     {
         PlayerPrefs.SetInt("score", score);
@@ -512,14 +400,6 @@ public class GameManager : MonoBehaviour
     [HideInInspector]
     public bool gameIsOver = false;
 
-    /// <summary>
-    /// Description:
-    /// Displays game over screen
-    /// Inputs:
-    /// none
-    /// Returns:
-    /// void (no return)
-    /// </summary>
     public void GameOver()
     {
         gameIsOver = true;

@@ -458,7 +458,8 @@ public class NetworkManagerClient : MonoBehaviour
 
     private void ConnectToServer()
     {
-        playerName = GameManager.instance.playerName;
+        playerName = String.Join("", GameManager.instance.playerName.Split(' '));
+        playerName = playerName.Substring(0, Math.Min(playerName.Length, NetConstants.maxPlayerNameLength));
 
         bufferWriter.Reset();
         bufferWriter.WriteUInt64(NextOutPackageId);

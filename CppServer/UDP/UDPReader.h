@@ -12,6 +12,7 @@ typedef int socklen_t;
 #endif
 
 #include <map>
+#include <memory>
 #include <mutex>
 #include <queue>
 #include <vector>
@@ -28,7 +29,7 @@ class UDPReader {
     fd_set readfds{};
 
     sockaddr address{};
-    Buffer buffer = Buffer(256);  // TODO: size?
+    Buffer buffer{};
 
     std::string ip;
     std::string port;
@@ -56,8 +57,8 @@ class UDPReader {
     std::map<std::string, std::map<std::string, uint64_t>> packageIdMap{};
 
     struct UDP {
-        uint16_t size;
-        char* buffer;
+        uint16_t size = UINT16_MAX;
+        std::shared_ptr<char[]> buffer{new char[size]};
         std::string ip;
         std::string port;
     };

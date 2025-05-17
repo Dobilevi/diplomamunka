@@ -41,7 +41,7 @@ Server::Server() {
     sockAddr.sin_family = AF_INET;
     sockAddr.sin_port = htons(port);
 
-    result = bind(serverSocket, (sockaddr*)&sockAddr, sizeof(sockAddr));
+    result = bind(serverSocket, reinterpret_cast<sockaddr*>(&sockAddr), sizeof(sockAddr));
 #ifdef __linux__
     assert(result != -1);
 #elif _WIN32

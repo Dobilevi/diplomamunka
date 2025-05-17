@@ -3,25 +3,22 @@
 
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <string>
 
 #include "MessageType.h"
 
 class Buffer {
     uint16_t size;
-    char* buffer = nullptr;
+    std::shared_ptr<char[]> buffer{nullptr};
     uint16_t index = 0;
 
     void CheckSize(uint16_t length) const;
 
    public:
-    Buffer(uint16_t size = 256);
+    void SetBuffer(std::shared_ptr<char[]> buffer, uint16_t size);
 
-    ~Buffer();
-
-    void SetBuffer(char* buffer, uint16_t size);
-
-    char* GetBuffer() const;
+    std::shared_ptr<char[]> GetBuffer() const;
 
     uint16_t GetBufferSize() const;
 
@@ -33,7 +30,7 @@ class Buffer {
     void Write(T value) {
         CheckSize(sizeof(T));
 
-        std::memcpy(buffer + index, &value, sizeof(T));
+        std::memcpy(buffer.get() + index, &value, sizeof(T));
         index += sizeof(T);
     }
 
@@ -45,7 +42,7 @@ class Buffer {
     void Read(T& out) {
         CheckSize(sizeof(T));
 
-        std::memcpy(&out, buffer + index, sizeof(T));
+        std::memcpy(&out, buffer.get() + index, sizeof(T));
         index += sizeof(T);
     }
 };
