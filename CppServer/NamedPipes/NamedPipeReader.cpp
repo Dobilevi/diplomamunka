@@ -34,8 +34,8 @@ NamedPipeReader::NamedPipeReader() {
                                         // needed but forces CreateNamedPipe(..)
                                         // to fail if the pipe already exists...
                         1,
-                        1024 * 16,  // TODO
-                        1024 * 16,  // TODO
+                        UINT16_MAX,
+                        UINT16_MAX,
                         NMPWAIT_USE_DEFAULT_WAIT, nullptr);
 
     while (listenPipe != INVALID_HANDLE_VALUE) {
@@ -78,7 +78,7 @@ uint16_t NamedPipeReader::ReadPort() {
 }
 
 void NamedPipeReader::ReadString(uint16_t length, std::u16string& out) {
-    char16_t buffer[64];  // TODO: Fix size?
+    char16_t buffer[64];
 
 #ifdef __linux__
     if ((result = read(listenPipe, &buffer, sizeof(char16_t) * length)) < 0) {

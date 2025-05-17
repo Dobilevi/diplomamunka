@@ -3,6 +3,10 @@
 
 #include <iostream>
 
+UDPWriter::UDPWriter() {
+    buffer.SetBuffer(std::shared_ptr<char>(new char[UINT16_MAX]), UINT16_MAX);
+}
+
 #ifdef __linux__
 void UDPWriter::SetSocket(int newSocket) { writeSocket = newSocket; }
 #elif _WIN32
@@ -76,7 +80,7 @@ void UDPWriter::SendErrorMessage(const std::string& ip, const std::string& port,
 
     buffer.Reset();
 
-    buffer.Write(htonll((uint64_t)0));
+    buffer.Write(htonll(static_cast<uint64_t>(0)));
     buffer.Write(messageType);
 
     SendUDPPackage(servinfo);

@@ -4,8 +4,6 @@
 #include <fcntl.h>
 
 #include <chrono>
-#include <cstring>   // TODO
-#include <iostream>  // TODO
 #include <thread>
 
 #ifdef __linux__
@@ -30,7 +28,7 @@ NamedPipeWriter::NamedPipeWriter() {
 
     while (writePipe == INVALID_HANDLE_VALUE) {
         if (ConnectNamedPipe(writePipe, nullptr) !=
-            FALSE)  // wait for someone to connect to the pipe
+            FALSE)  // Wait for someone to connect to the pipe
             return;
     }
 #endif

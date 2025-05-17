@@ -40,7 +40,7 @@ class NamedPipeWriter {
     }
 
     void WriteString(const std::u16string& message) {
-        uint16_t lengthNetwork = htons((uint16_t)message.length());
+        uint16_t lengthNetwork = htons(static_cast<uint16_t>(message.length()));
 
 #ifdef __linux__
         result = write(writePipe, &lengthNetwork, sizeof(uint16_t));
