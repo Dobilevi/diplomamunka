@@ -266,6 +266,7 @@ public class NetworkManagerServer : MonoBehaviour
         }
         catch (Exception e)
         {
+            GameManager.errorMessage = GameManager.ErrorMessage.CppServerStart;
             SceneManager.LoadScene("MainMenu");
             return;
         }
@@ -576,6 +577,7 @@ public class NetworkManagerServer : MonoBehaviour
 
         if (shouldExit)
         {
+            GameManager.errorMessage = GameManager.ErrorMessage.Closed;
             SceneManager.LoadScene("MainMenu");
         }
     }

@@ -1,6 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -19,7 +17,7 @@ public class InputManager : MonoBehaviour
         }
         else
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
         }
     }
 
@@ -38,10 +36,7 @@ public class InputManager : MonoBehaviour
         pausePressed = default;
     }
 
-    [Header("Player Movement Input")]
-    [Tooltip("The move input along the horizontal")]
     public float horizontalMoveAxis;
-    [Tooltip("The move input along the vertical")]
     public float verticalMoveAxis;
     public void ReadMovementInput(InputAction.CallbackContext context)
     {
@@ -50,7 +45,6 @@ public class InputManager : MonoBehaviour
         verticalMoveAxis = inputVector.y;
     }
 
-    [Header("Look Around input")]
     public float horizontalLookAxis;
     public float verticalLookAxis;
 
@@ -64,12 +58,8 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    [Header("Player Fire Input")]
-    [Tooltip("Whether or not the fire button was pressed this frame")]
     public bool firePressed;
-    [Tooltip("Whether or not the fire button is being held")]
     public bool fireHeld;
-    [Tooltip("Whether or not the fire button was pressed this frame")]
     public bool fireRocketPressed;
 
     public void ReadFireInput(InputAction.CallbackContext context)
@@ -97,7 +87,6 @@ public class InputManager : MonoBehaviour
         fireRocketPressed = false;
     }
 
-    [Header("Pause Input")]
     public bool pausePressed;
     public void ReadPauseInput(InputAction.CallbackContext context)
     {

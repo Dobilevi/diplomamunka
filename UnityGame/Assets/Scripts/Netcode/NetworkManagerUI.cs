@@ -86,6 +86,7 @@ public class NetworkManagerUI : MonoBehaviour
 
     private void OnDisconnect(ulong clientId)
     {
+        GameManager.errorMessage = GameManager.ErrorMessage.Disconnected;
         SceneManager.LoadScene("MainMenu");
     }
 }

@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 using Cpp;
 
@@ -39,25 +40,31 @@ public class GameManager : MonoBehaviour
     public int maxPlayers = 10;
     public int aiControlled = 0;
 
+    public enum ErrorMessage
+    {
+        None,
+        Unknown,
+        Port,
+        CppServerStart,
+        ServerFull,
+        Timeout,
+        Disconnected,
+        Closed
+    }
+    public static ErrorMessage errorMessage = ErrorMessage.None;
+    public Text errorMessageText;
+
     // The highest score obtained by this player
-    [Tooltip("The highest score acheived on this device")]
     public int highScore = 0;
 
-    [Header("Game Progress / Victory Settings")]
-    [Tooltip("Whether the game is winnable or not \nDefault: true")]
     public bool gameIsWinnable = true;
-    [Tooltip("The number of enemies that must be defeated to win the game")]
     public int enemiesToDefeat = 10;
     
     // The number of enemies defeated in game
     private int enemiesDefeated = 0;
 
-    [Tooltip("Whether or not to print debug statements about whether the game can be won or not according to the game manager's" +
-        " search at start up")]
     public bool printDebugOfWinnableStatus = true;
-    [Tooltip("Page index in the UIManager to go to on winning the game")]
     public int gameVictoryPageIndex = 0;
-    [Tooltip("The effect to create upon winning the game")]
     public GameObject victoryEffect;
 
     //The number of enemies observed by the game manager in this scene at start up"
@@ -70,9 +77,68 @@ public class GameManager : MonoBehaviour
 
     public string selectedLevel = "0";
 
+    private void ShowErrorMessage()
+    {
+        Debug.Log("ShowErrorMessage");
+
+        if (errorMessage != ErrorMessage.None)
+        {
+            Debug.Log("ShowErrorMessage if");
+            switch (errorMessage)
+            {
+                case ErrorMessage.Unknown:
+                {
+                    errorMessageText.text = "An unknown error occured!";
+                    break;
+                }
+                case ErrorMessage.Port:
+                {
+                    errorMessageText.text = "Couldn't bind to port!";
+                    break;
+                }
+                case ErrorMessage.CppServerStart:
+                {
+                    errorMessageText.text = "Couldn't start Cpp server!";
+                    break;
+                }
+                case ErrorMessage.ServerFull:
+                {
+                    errorMessageText.text = "The server is full!";
+                    break;
+                }
+                case ErrorMessage.Timeout:
+                {
+                    errorMessageText.text = "Server timeout!";
+                    break;
+                }
+                case ErrorMessage.Disconnected:
+                {
+                    errorMessageText.text = "Disconnected from the server!";
+                    break;
+                }
+                case ErrorMessage.Closed:
+                {
+                    errorMessageText.text = "The server closed!";
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+
+            errorMessage = ErrorMessage.None;
+            instance.uiManager.GoToPageByName("ErrorMessage");
+        }
+        else
+        {
+            Debug.Log("ShowErrorMessage else");
+        }
+    }
+
     private void Awake()
     {
-        Application.runInBackground = true; // TODO: Remove
+        Application.runInBackground = true;
 
         if (instance == null)
         {
@@ -182,9 +248,18 @@ public class GameManager : MonoBehaviour
                 instance.player = player;
                 GameObject.FindGameObjectsWithTag("MainCamera")[0].GetComponent<CameraController>().target = player.transform;
             }
+
+            if (SceneManager.GetActiveScene().name == "MainMenu")
+            {
+                ShowErrorMessage();
+            }
         }
         else
         {
+            if (SceneManager.GetActiveScene().name == "MainMenu")
+            {
+                ShowErrorMessage();
+            }
             DestroyImmediate(this);
         }
     }
@@ -192,20 +267,11 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         HandleStartUp();
-    
-#if UNITY_SERVER
-        Debug.Log("Standalone Windows");
-        SceneManager.LoadScene("LevelMultiplayerServer");
-#endif
     }
 
     void HandleStartUp()
     {
-        if (isServer)
-        {
-            // uiManager.;
-        }
-        else
+        if (!isServer)
         {
             UpdateUIElements();
         }
