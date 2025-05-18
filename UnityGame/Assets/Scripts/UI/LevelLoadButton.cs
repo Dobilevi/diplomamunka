@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;

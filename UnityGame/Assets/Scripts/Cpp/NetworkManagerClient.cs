@@ -24,7 +24,7 @@ public class NetworkManagerClient : MonoBehaviour
     private SpawnProjectileMessage spawnProjectileMessage = new SpawnProjectileMessage();
 
     private IPEndPoint serverIpEndPoint = null;
-    HostBufferWriter bufferWriter = new HostBufferWriter(256); // TODO: size?
+    HostBufferWriter bufferWriter = new HostBufferWriter(UInt16.MaxValue);
     NetworkBufferReader bufferReader = new NetworkBufferReader();
 
     private Task networkTask = null;
@@ -242,6 +242,7 @@ public class NetworkManagerClient : MonoBehaviour
 
             if (spawnMessage.clientId == clientId)
             {
+                GameManager.errorMessage = GameManager.ErrorMessage.Unknown;
                 SceneManager.LoadScene("MainMenu");
                 return;
             }
@@ -262,6 +263,7 @@ public class NetworkManagerClient : MonoBehaviour
 
             if (spawnMessage.clientId == clientId)
             {
+                GameManager.errorMessage = GameManager.ErrorMessage.Unknown;
                 SceneManager.LoadScene("MainMenu");
                 return;
             }
@@ -281,6 +283,7 @@ public class NetworkManagerClient : MonoBehaviour
 
             if (spawnMessage.clientId == clientId)
             {
+                GameManager.errorMessage = GameManager.ErrorMessage.Unknown;
                 SceneManager.LoadScene("MainMenu");
                 return;
             }
@@ -445,6 +448,7 @@ public class NetworkManagerClient : MonoBehaviour
 
             if (this.clientId == clientId)
             {
+                GameManager.errorMessage = GameManager.ErrorMessage.Disconnected;
                 SceneManager.LoadScene("MainMenu");
             }
             else
@@ -506,6 +510,7 @@ public class NetworkManagerClient : MonoBehaviour
                 }
                 else
                 {
+                    GameManager.errorMessage = GameManager.ErrorMessage.Port;
                     SceneManager.LoadScene("MainMenu");
                 }
                 break;
@@ -526,6 +531,7 @@ public class NetworkManagerClient : MonoBehaviour
             if (tries++ > 10)
             {
                 // Time out
+                GameManager.errorMessage = GameManager.ErrorMessage.Timeout;
                 SceneManager.LoadScene("MainMenu");
                 return;
             }
@@ -547,6 +553,7 @@ public class NetworkManagerClient : MonoBehaviour
     {
         if ((Time.realtimeSinceStartup - lastReceivedMessageTimestamp) > timeOut)
         {
+            GameManager.errorMessage = GameManager.ErrorMessage.Timeout;
             SceneManager.LoadScene("MainMenu");
         }
 
@@ -560,6 +567,7 @@ public class NetworkManagerClient : MonoBehaviour
 
         if (shouldExit)
         {
+            GameManager.errorMessage = GameManager.ErrorMessage.ServerFull;
             SceneManager.LoadScene("MainMenu");
         }
     }
