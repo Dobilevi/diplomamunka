@@ -36,12 +36,10 @@ void Buffer::ReadString(std::u16string& out, uint16_t length,
 
     CheckSize(sizeof(char16_t) * length);
 
-    char16_t* value = new char16_t[length + 1];
+    std::unique_ptr<char16_t[]> value{new char16_t[length + 1]};
     const char16_t nul = 0;
-    std::memcpy(value + length, &nul, sizeof(char16_t));
-    std::memcpy(value, buffer.get() + index, sizeof(char16_t) * length);
-    out = value;
+    std::memcpy(value.get() + length, &nul, sizeof(char16_t));
+    std::memcpy(value.get(), buffer.get() + index, sizeof(char16_t) * length);
+    out = value.get();
     index += sizeof(char16_t) * length;
-
-    delete[] value;
 }
