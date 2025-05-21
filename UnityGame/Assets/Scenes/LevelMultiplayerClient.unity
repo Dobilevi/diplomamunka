@@ -505,6 +505,10 @@ MonoBehaviour:
   projectilePrefab: {fileID: 3562651836113712045, guid: aee1688b385340b4bab2b46707955895, type: 3}
   rocketPrefab: {fileID: 3562651836113712045, guid: eff75606e821d854d8051284d800cd57, type: 3}
   enemyProjectilePrefab: {fileID: 4641165794769155162, guid: 5089b9cd653abda4ba6013a20e42c774, type: 3}
+  playerProjectileHitEffect: {fileID: 3287935543775063484, guid: 2593d5461178baf439ad53cc44f920d0, type: 3}
+  playerRocketHitEffect: {fileID: 3287935543775063484, guid: 2593d5461178baf439ad53cc44f920d0, type: 3}
+  enemyProjectileHitEffect: {fileID: 772346753889214456, guid: f8e26257c05545b46ba79dade814a9c3, type: 3}
+  hitSoundEffect: {fileID: 6229913163069739088, guid: d6029318d740811488fd5dd38a7e1ce1, type: 3}
 --- !u!4 &173203938
 Transform:
   m_ObjectHideFlags: 0

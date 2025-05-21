@@ -79,11 +79,8 @@ public class GameManager : MonoBehaviour
 
     private void ShowErrorMessage()
     {
-        Debug.Log("ShowErrorMessage");
-
         if (errorMessage != ErrorMessage.None)
         {
-            Debug.Log("ShowErrorMessage if");
             switch (errorMessage)
             {
                 case ErrorMessage.Unknown:
@@ -129,10 +126,6 @@ public class GameManager : MonoBehaviour
 
             errorMessage = ErrorMessage.None;
             instance.uiManager.GoToPageByName("ErrorMessage");
-        }
-        else
-        {
-            Debug.Log("ShowErrorMessage else");
         }
     }
 
