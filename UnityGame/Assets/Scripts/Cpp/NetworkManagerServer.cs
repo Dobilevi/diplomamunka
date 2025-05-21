@@ -20,9 +20,6 @@ public class NetworkManagerServer : MonoBehaviour
 {
     public Transform projectileHolder;
 
-    public int serverUpdateInterval = 50; // ms
-    public int clientUpdateInterval = 50;
-
     public float fireRate = 1.0f;
     public float rocketFireRate = 1.0f;
 
@@ -296,7 +293,7 @@ public class NetworkManagerServer : MonoBehaviour
         receiveTask = Task.Factory.StartNew(ReceiveUpdatesAsync, source.Token);
 
         // Start
-        updateTimer = new Timer(ShouldSendUpdate, null, new TimeSpan(0, 0, 0, 0, 0), new TimeSpan(0, 0, 0, 0, serverUpdateInterval));
+        updateTimer = new Timer(ShouldSendUpdate, null, new TimeSpan(0, 0, 0, 0, 0), new TimeSpan(0, 0, 0, 0, NetConstants.updateInterval));
 
         for (int i = 0; i < GameManager.instance.botCount; i++)
         {

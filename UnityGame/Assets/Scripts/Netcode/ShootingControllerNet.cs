@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -28,7 +29,8 @@ public class ShootingControllerNet : NetworkBehaviour
     public ulong teamId = 0;
 
     private float start, end;
-    List<float> responseTimes = new List<float>();
+    List<float> responseTimesManual = new List<float>();
+    List<float> responseTimesRtt = new List<float>();
 
     private void Update()
     {
@@ -138,8 +140,8 @@ public class ShootingControllerNet : NetworkBehaviour
         if (IsOwner)
         {
             end = Time.realtimeSinceStartup;
-            responseTimes.Add((end - start) * 1000);
-            responseTimes.Add(NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.ServerClientId));
+            responseTimesManual.Add((end - start) * 1000);
+            responseTimesRtt.Add(NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.ServerClientId));
         }
 	}
 
@@ -205,13 +207,22 @@ public class ShootingControllerNet : NetworkBehaviour
     {
         if (IsOwner && tag.Equals("Player"))
         {
-            StreamWriter fs = new StreamWriter($"response_times_netcode_{name}_{DateTime.Now.ToString("yyyyMMddHHmmss")}_{Time.realtimeSinceStartup}.txt");
-            fs.WriteLine(responseTimes.Count);
-            foreach (var responseTime in responseTimes)
+            StreamWriter fs = new StreamWriter($"response_times_netcode_manual_{name}_{DateTime.Now.ToString("yyyyMMddHHmmss")}_{Time.realtimeSinceStartup}.txt");
+            fs.WriteLine($"response times: {responseTimesManual.Count}");
+            fs.WriteLine("");
+            foreach (var responseTime in responseTimesManual)
             {
                 fs.WriteLine(responseTime);
             }
+            fs.Close();
 
+            fs = new StreamWriter($"response_times_netcode_rtt_{name}_{DateTime.Now.ToString("yyyyMMddHHmmss")}_{Time.realtimeSinceStartup}.txt");
+            fs.WriteLine($"response times: {responseTimesRtt.Count}");
+            fs.WriteLine("");
+            foreach (var responseTime in responseTimesRtt)
+            {
+                fs.WriteLine(responseTime);
+            }
             fs.Close();
         }
     }

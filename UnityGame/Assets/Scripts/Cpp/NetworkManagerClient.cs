@@ -67,8 +67,16 @@ public class NetworkManagerClient : MonoBehaviour
     public GameObject enemyProjectilePrefab = null;
     private ConcurrentDictionary<ulong, GameObject> projectileMap = new ConcurrentDictionary<ulong, GameObject>();
 
+    public GameObject playerProjectileHitEffect;
+    public GameObject playerRocketHitEffect;
+    public GameObject enemyProjectileHitEffect;
+
+    public GameObject hitSoundEffect;
+
     private float start, end;
     private List<float> responseTimes = new List<float>();
+    private ulong packagesLost = 0;
+    private ulong packagesReceived = 0;
     
     public void Shoot(Spawnable spawnable, Vector3 position)
     {
@@ -142,6 +150,8 @@ public class NetworkManagerClient : MonoBehaviour
                 }
                 else
                 {
+                    packagesReceived++;
+                    packagesLost += newPackageId - packageId - 1;
                     packageId = newPackageId;
                 }
 
@@ -304,28 +314,60 @@ public class NetworkManagerClient : MonoBehaviour
         {
             spawnProjectileQueue.TryDequeue(out SpawnProjectileMessage spawnMessage);
 
-            if (spawnMessage.spawnable == Spawnable.Fire || spawnMessage.spawnable == Spawnable.Rocket)
+            switch (spawnMessage.spawnable)
             {
-                // Create the projectile
-                projectileMap[spawnMessage.projectileId] = Instantiate(spawnMessage.spawnable == Spawnable.Fire ? projectilePrefab : rocketPrefab, new Vector2(spawnMessage.x, spawnMessage.y), Quaternion.Euler(0, 0, spawnMessage.rotation), projectileHolder);
-                projectileMap[spawnMessage.projectileId].GetComponent<Damage>().teamId = spawnMessage.clientId;
-
-                if (clientId == spawnMessage.clientId)
+                case Spawnable.Fire:
+                case Spawnable.Rocket:
                 {
-                    end = Time.realtimeSinceStartup;
-                    responseTimes.Add((end - start) * 1000);
+                    // Create the projectile
+                    projectileMap[spawnMessage.projectileId] = Instantiate(spawnMessage.spawnable == Spawnable.Fire ? projectilePrefab : rocketPrefab, new Vector2(spawnMessage.x, spawnMessage.y), Quaternion.Euler(0, 0, spawnMessage.rotation), projectileHolder);
+                    projectileMap[spawnMessage.projectileId].GetComponent<Damage>().teamId = spawnMessage.clientId;
 
-                    player.GetComponent<ShootingController>().LastFired = Time.timeSinceLevelLoad;
-                    if (spawnProjectileMessage.spawnable == Spawnable.Rocket)
+                    if (clientId != spawnMessage.clientId)
                     {
-                        player.GetComponent<ShootingController>().RocketCount--;
+                        switch (spawnMessage.spawnable)
+                        {
+                            case Spawnable.Fire:
+                            {
+                                Instantiate(playerPrefab.GetComponent<ShootingController>().fireEffect);
+                                break;
+                            }
+                            case Spawnable.Rocket:
+                            {
+                                Instantiate(playerPrefab.GetComponent<ShootingController>().fireRocketEffect);
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+                        }
                     }
+
+                    if (clientId == spawnMessage.clientId)
+                    {
+                        end = Time.realtimeSinceStartup;
+                        responseTimes.Add((end - start) * 1000);
+
+                        player.GetComponent<ShootingController>().LastFired = Time.timeSinceLevelLoad;
+                        if (spawnProjectileMessage.spawnable == Spawnable.Rocket)
+                        {
+                            player.GetComponent<ShootingController>().RocketCount--;
+                        }
+                    }
+                    break;
                 }
-            }
-            else if (spawnMessage.spawnable == Spawnable.EnemyFire)
-            {
-                // Create the projectile
-                projectileMap[spawnMessage.projectileId] = Instantiate(enemyProjectilePrefab, new Vector2(spawnMessage.x, spawnMessage.y), Quaternion.Euler(0, 0, spawnMessage.rotation), projectileHolder);
+                case Spawnable.EnemyFire:
+                {
+                    // Create the projectile
+                    projectileMap[spawnMessage.projectileId] = Instantiate(enemyProjectilePrefab, new Vector2(spawnMessage.x, spawnMessage.y), Quaternion.Euler(0, 0, spawnMessage.rotation), projectileHolder);
+                    Instantiate(botPrefab.GetComponentInChildren<ShootingController>().fireEffect);
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
         }
 
@@ -421,7 +463,25 @@ public class NetworkManagerClient : MonoBehaviour
                 case Spawnable.EnemyFire:
                 {
                     projectileMap.Remove(despawnMessage.id, out GameObject objectToDespawn);
-                    Instantiate(objectToDespawn.GetComponent<Damage>().hitEffect, objectToDespawn.transform.position, objectToDespawn.transform.rotation, projectileHolder);
+                    switch (despawnMessage.spawnable)
+                    {
+                        case Spawnable.Fire:
+                        {
+                            Instantiate(playerProjectileHitEffect, objectToDespawn.transform.position, objectToDespawn.transform.rotation, projectileHolder);
+                            break;
+                        }
+                        case Spawnable.Rocket:
+                        {
+                            Instantiate(playerRocketHitEffect, objectToDespawn.transform.position, objectToDespawn.transform.rotation, projectileHolder);
+                            break;
+                        }
+                        case Spawnable.EnemyFire:
+                        {
+                            Instantiate(enemyProjectileHitEffect, objectToDespawn.transform.position, objectToDespawn.transform.rotation, projectileHolder);
+                            break;
+                        }
+                    }
+                    Instantiate(hitSoundEffect, objectToDespawn.transform.position, objectToDespawn.transform.rotation, projectileHolder);
                     Destroy(objectToDespawn);
 
                     break;
@@ -546,7 +606,7 @@ public class NetworkManagerClient : MonoBehaviour
         player.transform.position = new Vector2(spawnMessage.x, spawnMessage.y);
 
         // Start sending updates
-        updateTimer = new Timer(ShouldSendUpdate, null, new TimeSpan(0, 0, 0, 0, 0), new TimeSpan(0, 0, 0, 0, NetConstants.clientUpdateInterval));
+        updateTimer = new Timer(ShouldSendUpdate, null, new TimeSpan(0, 0, 0, 0, 0), new TimeSpan(0, 0, 0, 0, NetConstants.updateInterval));
     }
 
     private void Update()
@@ -593,6 +653,10 @@ public class NetworkManagerClient : MonoBehaviour
         updateTimer.Dispose();
 
         StreamWriter fs = new StreamWriter($"response_times_{DateTime.Now.ToString("yyyyMMddHHmmss")}_{Time.realtimeSinceStartup}.txt");
+        fs.WriteLine($"packages received: {packagesReceived}");
+        fs.WriteLine($"packages lost: {packagesLost}");
+        fs.WriteLine($"response times: {responseTimes.Count}");
+        fs.WriteLine("");
         foreach (var responseTime in responseTimes)
         {
             fs.WriteLine(responseTime);

@@ -19,8 +19,8 @@ public class MultiMovement : MonoBehaviour
 
     public void MoveToPoint(Vector2 point, float angle)
     {
-        rigidbody2D.velocity = (point - (Vector2)transform.position) / NetConstants.clientUpdateInterval * 1000;
-        rigidbody2D.angularVelocity = Mathf.DeltaAngle(transform.rotation.eulerAngles.z,  angle) / NetConstants.clientUpdateInterval * 1000;
+        rigidbody2D.velocity = (point - (Vector2)transform.position) / NetConstants.updateInterval * 1000;
+        rigidbody2D.angularVelocity = Mathf.DeltaAngle(transform.rotation.eulerAngles.z,  angle) / NetConstants.updateInterval * 1000;
     }
 
     public void Stop()
